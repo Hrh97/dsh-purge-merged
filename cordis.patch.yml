@@ -51,6 +51,9 @@
     continueText: "继续"
     capabilityProtocol: true
     hooksDenyBypass: true
+    # 按需叶子注入。auto = 按本轮任务域只注入相关的 Scoped Rules / Routing 条目，
+    # 判不出任务域时回落全文；full = 永远注入全文（旧行为）。
+    leafInject: "auto"
 
 - insert:
     # 演练台：预设 + 技能落地（本插件 lib/redteam）
