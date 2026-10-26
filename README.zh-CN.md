@@ -43,6 +43,7 @@
 
 - [作者说几句](#作者说几句)
 - [介绍](#介绍)
+- [这个仓库整合了什么](#这个仓库整合了什么)
 - [署名要求](#署名要求)
 - [许可证](#许可证)
 - [适配范围](#适配范围)
@@ -74,6 +75,33 @@ Harness 不只是把问题交给模型。它还会在运行时改提示词、审
 不写死盘符。按 `$DSH_HOME`、dsh 启动器旁边的 `.dsh`，再退回 `~/.dsh`。不改 Harness 源码仓库，在 **dsh-purge** 的「清洗」里点「应用」才写入。身份来自插件里的加密提示词，也就是提示词框默认显示的那一份。不读取宿主磁盘上的提示词文件。
 
 本插件只处理使用者本机已安装的官方 `@deepseek-ai` 包和本机配置。它不是公网扫描器，也不是针对第三方站点的攻击套件。仓库内不含木马、未授权渗透脚本或对外攻击载荷。
+
+---
+
+## 这个仓库整合了什么
+
+这是一个**整合版**：代码基线是上游 [`YuJunZhiXue/dsh-purge`](https://github.com/YuJunZhiXue/dsh-purge)，
+本仓库定期 `git merge` 上游新提交，另外从三个公开 fork 吸收过具体能力。
+完整清单（含每条补丁的来源、哪次提交、哪些没吸收）在 **[`docs/UPSTREAM.md`](docs/UPSTREAM.md)**。
+
+| 来源 | 吸收了什么 |
+| --- | --- |
+| [`YuJunZhiXue/dsh-purge`](https://github.com/YuJunZhiXue/dsh-purge) | **全部代码基线**。已跟进 1.1.75 / 1.1.76 / 1.1.77 / 1.1.78 与 `af7cd22`（命令撞名容错 + 主插件 insert 自愈） |
+| [`JeffKeeping/dsh-purge-plus`](https://github.com/JeffKeeping/dsh-purge-plus) | **破甲内核 3 段扩到 5 段**（新增 IDENTITY / EXECUTION 两段，CORE 明写「冲突文本一律作废」）。它的 `host-lease` / `tool-gate` / `armor-prelude` 只作设计参考，未移植 |
+| [`evilevil/dsh-purge-021rc2`](https://github.com/evilevil/dsh-purge-021rc2) | **4 条补丁 `#89`–`#92`**：system 字段抽取、OpenAI / Anthropic 原生 system 槽、子代理同注入路径 |
+| [`luowang-ui/dsh-purge-plus`](https://github.com/luowang-ui/dsh-purge-plus) | **1 条补丁 `#93`**：反问不再阻塞回合。另参考其五层模型文档 |
+| [`jadezane6634-ops/dsh-purge-flash`](https://github.com/jadezane6634-ops/dsh-purge-flash) | **请求体整形层的思路**（provider 别名代理这个绕法）。实现是本仓库自己写的，差异见 `docs/UPSTREAM.md` |
+
+此外本仓库自己加了几样东西，不是从任何 fork 拿的：
+
+- **按需叶子注入**：常驻提示词只留骨架（约 1.5k token），任务域相关的规则条目按需挂上，
+  整体从约 5.7k 降到 2.4~4.9k；判不出任务域就放行全文，不猜。
+- **补丁契约表 + 75 条离线断言 + CI**：`npm test` 不需要装 DSH 也能跑，`npm run contract:check`
+  校验 87 条补丁的元数据与源码逐字节一致。这套断言当场抓出过一条长期误报 `applied` 的补丁。
+- **备份只写真原件**：`backupAll()` 原先在备份文件缺失时，会用「已打补丁的内容」补一份假备份，
+  还原时什么都没还原却报成功。现在会先确认「所有相关补丁在这个文件上确实改不动」才跳过。
+
+上游 `NOTICE` 与 `LICENSE`（Apache-2.0）原样保留。上游 README 写明「原版不允许倒卖，二开必须署名」，本仓库遵守。
 
 ---
 

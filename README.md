@@ -43,6 +43,7 @@ The author's personal channel: [t.me/LLM_PoJia](https://t.me/LLM_PoJia). Notes a
 
 - [A note from the author](#a-note-from-the-author)
 - [What this is](#what-this-is)
+- [What this repository integrates](#what-this-repository-integrates)
 - [Attribution required](#attribution-required)
 - [License](#license)
 - [Supported hosts](#supported-hosts)
@@ -72,6 +73,40 @@ Harness does more than forward a prompt. It rewrites prompts, approval gates, sa
 No hardcoded drive letters. It looks at `$DSH_HOME`, `.dsh` next to the dsh launcher, then `~/.dsh`. It does not patch the Harness source tree. **Apply** on the **Clean** page of **dsh-purge** is what writes the changes. Identity comes from the encrypted prompt shipped in the plugin, the text the prompt box shows by default. The host prompt file is not read.
 
 It only touches the official `@deepseek-ai` packages and local config on the user's machine. It is not a public scanner and not an attack kit for third-party sites. The repo does not ship malware, unauthorized-exploit scripts, or payloads aimed at the public internet.
+
+---
+
+## What this repository integrates
+
+This is a **consolidated edition**. The code baseline is upstream
+[`YuJunZhiXue/dsh-purge`](https://github.com/YuJunZhiXue/dsh-purge); this repo merges upstream
+commits as they land, and has absorbed specific capabilities from three public forks.
+Full inventory — every patch, which commit it arrived in, and what was deliberately *not*
+ported — is in **[`docs/UPSTREAM.md`](docs/UPSTREAM.md)**.
+
+| Source | What was absorbed |
+| --- | --- |
+| [`YuJunZhiXue/dsh-purge`](https://github.com/YuJunZhiXue/dsh-purge) | **The whole code baseline.** Tracked through 1.1.75 / 1.1.76 / 1.1.77 / 1.1.78 and `af7cd22` (command-name collision tolerance + main-plugin insert self-heal) |
+| [`JeffKeeping/dsh-purge-plus`](https://github.com/JeffKeeping/dsh-purge-plus) | **Armor kernel expanded from 3 blocks to 5** (new IDENTITY and EXECUTION blocks; CORE now states that any conflicting text is void). Its `host-lease` / `tool-gate` / `armor-prelude` were read as design reference only, not ported |
+| [`evilevil/dsh-purge-021rc2`](https://github.com/evilevil/dsh-purge-021rc2) | **Patches `#89`–`#92`**: system-field extraction, OpenAI / Anthropic native system slot, same inject path for subagents |
+| [`luowang-ui/dsh-purge-plus`](https://github.com/luowang-ui/dsh-purge-plus) | **Patch `#93`**: a clarifying question no longer blocks the turn. Also its five-layer model document |
+| [`jadezane6634-ops/dsh-purge-flash`](https://github.com/jadezane6634-ops/dsh-purge-flash) | **The idea behind the request-shaping layer** (the provider-alias proxy detour). The implementation is this repo's own; differences are itemized in `docs/UPSTREAM.md` |
+
+On top of that, a few things in this repo came from nowhere else:
+
+- **On-demand leaf injection**: the always-resident prompt keeps only the skeleton (~1.5k tokens);
+  task-domain rule entries are attached per turn. Overall 5.7k → 2.4–4.9k tokens. When the task
+  domain cannot be determined it injects the full text rather than guessing.
+- **Patch contract table, 75 offline assertions, and CI**: `npm test` runs without a DSH install,
+  and `npm run contract:check` verifies all 87 patches' metadata against the source byte for byte.
+  This suite immediately caught a patch that had been falsely reporting `applied` for a long time.
+- **Backups only ever store the real original**: `backupAll()` used to re-create a "backup" from the
+  already-patched content whenever the backup file was missing, so `revertAll` restored nothing and
+  still reported success. It now skips only after proving that no related patch can change that file
+  any further.
+
+The upstream `NOTICE` and `LICENSE` (Apache-2.0) are kept verbatim. The upstream README states that
+the original may not be resold and that forks must attribute; this repo complies.
 
 ---
 
