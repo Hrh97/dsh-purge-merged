@@ -144,7 +144,9 @@ test("applyLeafFilter: 无任务正文时 fail-open，不猜", () => {
 test("applyLeafFilter: 判不出叶子时也放行全文（比判错更安全）", () => {
   const out = applyLeafFilter(FIXTURE, "帮我写个 React 组件", {});
   assert.equal(out.text, FIXTURE);
-  assert.equal(out.reason, "no-task-text");
+  // 有任务正文但没命中任何叶子 → no-leaf-match；与「压根没抓到任务正文」
+  // 的 no-task-text 分开报，否则日志里全是同一个字符串，接线断了也看不出来。
+  assert.equal(out.reason, "no-leaf-match");
 });
 
 test("applyLeafFilter: 命中叶子时确实变小，且只留命中那条规则", () => {
