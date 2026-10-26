@@ -1,0 +1,48 @@
+name: CI
+
+# 契约测试不依赖宿主 DSH：所有断言跑在合成夹具上，CI 里没有 dsh 也能全绿。
+# 唯一会碰真宿主的是 release.yml（发布），这里只做静态与行为回归。
+on:
+  push:
+    branches:
+      - master
+      - "local/**"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ["20", "22"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      # package.json 的 peerDependencies 指向 @deepseek-ai/cordis，但测试全程不 import
+      # 宿主服务（只有惰性 ctx.get），所以不装依赖。
+      - name: Syntax-check every module
+        run: |
+          set -euo pipefail
+          for f in lib/*.js bin/*.js; do node --check "$f"; done
+
+      - name: Plugin entry imports cleanly
+        run: node --input-type=module -e "await import('./lib/index.js')"
+
+      - name: Patch contract is up to date
+        run: node scripts/gen-patch-contract.mjs --check
+
+      - name: Contract tests
+        run: node --test

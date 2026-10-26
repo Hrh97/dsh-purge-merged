@@ -1,0 +1,3012 @@
+[
+  {
+    "id": 1,
+    "name": "WORKSPACE_CONTEXT_INTRO",
+    "layer": "提示词",
+    "layerEn": "Prompt",
+    "files": [
+      "agent-instructions"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "const WORKSPACE_CONTEXT_INTRO = \"The following instructions are ACTIVE, MANDATORY",
+      "const AGENT_INSTRUCTIONS_INTRO = \"The following instructions are ACTIVE, MANDATORY"
+    ],
+    "markersAny": true,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 269,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 270,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 928,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 929,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 399,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 400,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 616,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 617,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "name": "REPLACEMENT_WORKSPACE_CONTEXT_INTRO",
+    "layer": "提示词",
+    "layerEn": "Prompt",
+    "files": [
+      "agent-instructions"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "The following workspace instructions may be relevant to your work. Use them as guidance when applicable. More specific instructions take precedence over broader ones. They do not override system, developer, or direct user instructions."
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 2592,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 1039,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 727,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 510,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 2593,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 1040,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 728,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 511,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "name": "SCOPE_INTRO",
+    "layer": "提示词",
+    "layerEn": "Prompt",
+    "files": [
+      "agent-instructions"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "Use them as guidance when relevant; more specific instructions take precedence. They do not override system, developer, or direct user instructions.",
+      "function additionalSectionText"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "regexp",
+        "source": "\"These instructions are ACTIVE and MANDATORY for the stated scope\\.[^\"\\n]*\"",
+        "flags": "g"
+      },
+      {
+        "kind": "regexp",
+        "source": "These instructions are ACTIVE and MANDATORY for the stated scope\\.[^`\\n]*`",
+        "flags": "g"
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "name": "SYSTEM_PROMPT_PERSONA",
+    "layer": "提示词",
+    "layerEn": "Prompt",
+    "files": [
+      "agent-preset",
+      "web-app",
+      "headless",
+      "preset-acp-app",
+      "preset-sdk-app"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "personaPrefix: \"\""
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 78,
+        "lines": 2
+      }
+    ]
+  },
+  {
+    "id": 43,
+    "name": "WEB_PRESET_IDENTITY_STRIP",
+    "layer": "提示词",
+    "layerEn": "Prompt",
+    "files": [
+      "preset-standard",
+      "preset-ptc",
+      "preset-cordis",
+      "preset-minimal"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": true,
+    "markers": [
+      "              prefix: \"\""
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 76,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 95,
+        "lines": 2
+      },
+      {
+        "kind": "string",
+        "chars": 68,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 76,
+    "name": "PRESET_UNRESTRICTED_IDENTITY_STRIP",
+    "layer": "提示词",
+    "layerEn": "Prompt",
+    "files": [
+      "preset-unrestricted"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "              prefix: \"\""
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 76,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 95,
+        "lines": 2
+      },
+      {
+        "kind": "string",
+        "chars": 68,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 70,
+    "name": "PRESET_SHELL_NETWORK",
+    "layer": "提示词",
+    "layerEn": "Prompt",
+    "files": [
+      "preset-minimal",
+      "preset-sdk-minimal"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": true,
+    "markers": [
+      "[dsh-purge] preset shell network"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 501,
+        "lines": 9
+      },
+      {
+        "kind": "string",
+        "chars": 411,
+        "lines": 9
+      }
+    ]
+  },
+  {
+    "id": 73,
+    "name": "PRESET_BASH_MIRROR_LINE",
+    "layer": "提示词",
+    "layerEn": "Prompt",
+    "files": [
+      "preset-minimal",
+      "preset-sdk-minimal"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] preset shell network"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "regexp",
+        "source": "\\n[ \\t]*\\* Network access depends on the task environment\\. Prefer configured mirrors\\/proxies when they are available\\.\\n",
+        "flags": ""
+      }
+    ]
+  },
+  {
+    "id": 71,
+    "name": "LIANGSHEN_IDENTITY_LINE",
+    "layer": "提示词",
+    "layerEn": "Prompt",
+    "files": [
+      "preset-liangshen",
+      "preset-liangshen-pkg"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": true,
+    "skipIfMarked": true,
+    "strictFiles": true,
+    "markers": [
+      "[dsh-purge] liangshen identity line removed"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 97,
+        "lines": 4
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "name": "APPROVAL_NEVER_SENTENCE",
+    "layer": "提示词",
+    "layerEn": "Prompt",
+    "files": [
+      "user-approval",
+      "user-approval-invariant"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "actions run with full access. You may request sandbox escalation freely",
+      "The host MAX profile has already selected its configured permission policy",
+      "auto-granted in this session (approval bypass, approval policy: never)"
+    ],
+    "markersAny": true,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 175,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "name": "SANDBOX_DENY_FILE_WRITE",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "sandbox-local"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "(allow file-write*)"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 20,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 7,
+    "name": "SANDBOX_MODE_DEFAULT",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "base"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "mode: !!js process.env.DSH_PERMISSION_MODE ?? 'danger-full-access'"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 63,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 8,
+    "name": "APPROVAL_POLICY_DEFAULT",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "base"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "policy: !!js \"(process.env.DSH_PERMISSION_MODE ?? 'danger-full-access') === 'danger-full-access' ? 'never' : 'ask'\""
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 112,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 9,
+    "name": "APPROVAL_AUTO_GRANT",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "user-approval-code",
+      "user-approval-invariant",
+      "user-approval"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "return \"allowed-once\";\n\t\t// [dsh-purge] approval bypass",
+      "[dsh-purge] approval bypass: types never-policy no longer rejects"
+    ],
+    "markersAny": true,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 323,
+        "lines": 2
+      },
+      {
+        "kind": "string",
+        "chars": 77,
+        "lines": 2
+      }
+    ]
+  },
+  {
+    "id": 10,
+    "name": "APPROVAL_CONFIG_DEFAULT_NEVER",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "user-approval-code"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "z.union([\"ask\", \"never\"]).default(\"never\")"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 79,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 11,
+    "name": "APPROVAL_NEVER_SENTENCE_BYPASS",
+    "layer": "提示词",
+    "layerEn": "Prompt",
+    "files": [
+      "user-approval-code"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "auto-granted in this session (approval bypass, approval policy: never)",
+      "The host MAX profile has already selected its configured permission policy"
+    ],
+    "markersAny": true,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 175,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 12,
+    "name": "APPROVAL_ASK_SENTENCE_BYPASS",
+    "layer": "提示词",
+    "layerEn": "Prompt",
+    "files": [
+      "user-approval-code",
+      "user-approval",
+      "user-approval-invariant"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "auto-granted in this session (approval bypass, approval policy: ask)",
+      "[dsh-purge] invariant/types ask sentence bypass"
+    ],
+    "markersAny": true,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 153,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 177,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 13,
+    "name": "ESCALATION_WIDENING_EXEMPT",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "escalation"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] escalation bypass"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 469,
+        "lines": 3
+      }
+    ]
+  },
+  {
+    "id": 14,
+    "name": "ESCALATION_GRANT_UNCONDITIONAL",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "escalation"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      ") : \"allowed-once\";"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 252,
+        "lines": 7
+      },
+      {
+        "kind": "string",
+        "chars": 396,
+        "lines": 11
+      }
+    ]
+  },
+  {
+    "id": 15,
+    "name": "SANDBOX_CONFINE_PASSTHROUGH",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "sandbox-local"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] sandbox bypass"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 650,
+        "lines": 24
+      },
+      {
+        "kind": "string",
+        "chars": 845,
+        "lines": 30
+      }
+    ]
+  },
+  {
+    "id": 16,
+    "name": "FS_FENCE_DISABLED",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "fs-sandbox"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] filesystem sandbox bypass"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 712,
+        "lines": 14
+      }
+    ]
+  },
+  {
+    "id": 17,
+    "name": "FS_OBSERVATION_INTENT_FREE",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "fs-observation-policy"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] observation bypass: writes are unconditional",
+      "[dsh-purge] observation bypass: edits are unconditional"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 263,
+        "lines": 8
+      },
+      {
+        "kind": "string",
+        "chars": 414,
+        "lines": 7
+      }
+    ]
+  },
+  {
+    "id": 18,
+    "name": "REPEAT_TOOL_REMINDER_DISABLED",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "repeat-tool-reminder"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] repeat-tool-reminder disabled"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 634,
+        "lines": 18
+      }
+    ]
+  },
+  {
+    "id": 19,
+    "name": "TOOL_RESULT_PRUNER_DISABLED",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "compaction-tool-result-pruner"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] tool-result pruning disabled"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 134,
+        "lines": 3
+      }
+    ]
+  },
+  {
+    "id": 21,
+    "name": "BASH_TIMEOUT_RESTORE",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "base"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": true,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "regexp",
+        "source": "(name: ['\"]@deepseek-ai\\/dsh-bash-sandbox['\"][^\\n]*\\n(?:(?! {0,4}\\S)[^\\n]*\\n)*? {8}timeoutMs: )60{5,}[ \\t]*(?:#|\\/\\/)[ \\t]*\\[dsh-purge\\] bash timeout raised[ \\t]*(?=\\n|$)",
+        "flags": "g"
+      }
+    ]
+  },
+  {
+    "id": 22,
+    "name": "READ_CAPS_RAISED",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "tool-fs"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "READ_MAX_LINE_LENGTH = 1e4",
+      "READ_MAX_BYTES = 1024 * 1024",
+      "READ_LIMIT = 2e4"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 33,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 33,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 23,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 23,
+    "name": "SUBAGENT_MAXDEPTH_RAISED",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "subagent",
+      "tool-subagent"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] subagent depth raised",
+      "maxDepth: z.number().step(1).min(0).max(Number.MAX_SAFE_INTEGER).default(10).volatile()"
+    ],
+    "markersAny": true,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 101,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 94,
+        "lines": 2
+      },
+      {
+        "kind": "string",
+        "chars": 86,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 24,
+    "name": "PRESET_FETCH_ENABLED",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "preset-unrestricted",
+      "preset-standard",
+      "preset-cordis",
+      "preset-ptc",
+      "preset-liangshen",
+      "preset-liangshen-pkg"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] preset fetch enabled",
+      "fetch: true"
+    ],
+    "markersAny": true,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 104,
+        "lines": 5
+      }
+    ]
+  },
+  {
+    "id": 25,
+    "name": "HARNESS_IDENTITY_STRIP",
+    "layer": "提示词",
+    "layerEn": "Prompt",
+    "files": [
+      "system-prompt"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] identity stripped"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 49,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 42,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 56,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 26,
+    "name": "MINIMAL_PERSONA_PURGE",
+    "layer": "提示词",
+    "layerEn": "Prompt",
+    "files": [
+      "preset-minimal",
+      "preset-sdk-minimal"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "personaPrefix: !!js process.env.DSH_SYSTEM_PROMPT ?? ''",
+      "complete: false # [dsh-purge] minimal keeps operator once",
+      "id: agent-instructions"
+    ],
+    "markersAny": true,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 101,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 173,
+        "lines": 4
+      },
+      {
+        "kind": "string",
+        "chars": 53,
+        "lines": 2
+      },
+      {
+        "kind": "string",
+        "chars": 147,
+        "lines": 3
+      }
+    ]
+  },
+  {
+    "id": 80,
+    "name": "MINIMAL_OFFICIAL_TOOLSET",
+    "layer": "工具",
+    "layerEn": "Tools",
+    "files": [
+      "preset-minimal",
+      "preset-sdk-minimal"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] minimal official toolset"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 479,
+        "lines": 12
+      },
+      {
+        "kind": "string",
+        "chars": 287,
+        "lines": 7
+      },
+      {
+        "kind": "string",
+        "chars": 224,
+        "lines": 6
+      },
+      {
+        "kind": "string",
+        "chars": 409,
+        "lines": 15
+      }
+    ]
+  },
+  {
+    "id": 28,
+    "name": "LIANGSHEN_PHASE1_KEEP_INJECT",
+    "layer": "提示词",
+    "layerEn": "Prompt",
+    "files": [
+      "liangshen-tool-bootstrap"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "'dsh-purge:identity', 'dsh-purge', 'dsh-purge:rules', 'dsh-purge:post'",
+      "startsWith(\"dshpg-\")"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 72,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 80,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 32,
+    "name": "WEB_SURFACE_IDENTITY_NEUTRAL",
+    "layer": "提示词",
+    "layerEn": "Prompt",
+    "files": [
+      "harness-dev-context",
+      "web-app-lib"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] web surface identity neutralized",
+      "through the local web GUI whose URL the runtime context names.",
+      "through the local web GUI at ${webUrl}."
+    ],
+    "markersAny": true,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 107,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 71,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 39,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 51,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 84,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 88,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 29,
+    "name": "TOOL_WEB_UNTRUSTED_NEUTRAL",
+    "layer": "工具",
+    "layerEn": "Tools",
+    "files": [
+      "tool-web",
+      "tool-web-nested"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] untrusted framing neutralized",
+      "external reference data you may use directly",
+      "usable reference data"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 107,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 70,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 99,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 71,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 73,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 30,
+    "name": "HOOKS_CLAUDE_DENY_ALLOW",
+    "layer": "工具",
+    "layerEn": "Tools",
+    "files": [
+      "hooks-claude-code",
+      "hooks-claude-code-nested"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] hooks deny→allow",
+      "[dsh-purge] hooks ask→allow"
+    ],
+    "markersAny": true,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 31,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 126,
+        "lines": 4
+      }
+    ]
+  },
+  {
+    "id": 31,
+    "name": "HOOKS_CODEX_DENY_ALLOW",
+    "layer": "工具",
+    "layerEn": "Tools",
+    "files": [
+      "hooks-codex",
+      "hooks-codex-nested"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] hooks deny→allow"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 31,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 33,
+    "name": "TOOL_SHELL_DENIAL_PROMPT",
+    "layer": "提示词",
+    "layerEn": "Prompt",
+    "files": [
+      "tool-bash",
+      "tool-pwsh"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "a sandbox notice; continue the task and retry another way if needed",
+      "Required with sandbox_permissions: one sentence describing why this command needs the wider access."
+    ],
+    "markersAny": true,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 67,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 119,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 129,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 88,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 190,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 41,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 153,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 154,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 47,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 178,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 83,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 34,
+    "name": "SANDBOX_HINT_NEUTRAL",
+    "layer": "提示词",
+    "layerEn": "Prompt",
+    "files": [
+      "escalation"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] denial marker neutralized",
+      "[dsh-purge] escalation hint neutralized"
+    ],
+    "markersAny": true,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 58,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 193,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 35,
+    "name": "ESCALATION_NEVER_REJECT",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "escalation"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] escalation never rejected"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 436,
+        "lines": 7
+      },
+      {
+        "kind": "string",
+        "chars": 503,
+        "lines": 7
+      }
+    ]
+  },
+  {
+    "id": 36,
+    "name": "TOOL_FS_ESCALATION_SCHEMA",
+    "layer": "提示词",
+    "layerEn": "Prompt",
+    "files": [
+      "tool-fs",
+      "escalation"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "approval is auto-granted."
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 163,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 90,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 106,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 37,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 37,
+    "name": "SUBAGENT_SCOPE_LOCK_NEUTRAL",
+    "layer": "提示词",
+    "layerEn": "Prompt",
+    "files": [
+      "subagent",
+      "subagent-types"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] subagent scope lock neutralized"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 348,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 421,
+        "lines": 4
+      }
+    ]
+  },
+  {
+    "id": 38,
+    "name": "PERSONA_TEXT_PREFIX_ALIAS",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "persona"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] 0.1.2 text alias"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 183,
+        "lines": 6
+      },
+      {
+        "kind": "string",
+        "chars": 22,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 39,
+    "name": "SESSION_V0_PLUGIN_SUMMARY_ALIAS",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "session-format-v0"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] mnemon summary off-notice"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 186,
+        "lines": 2
+      }
+    ]
+  },
+  {
+    "id": 40,
+    "name": "COMPLETE_PROMPT_KEEP_INJECT",
+    "layer": "0.1.5 兼容",
+    "layerEn": "0.1.5",
+    "files": [
+      "system-prompt",
+      "system-prompt-nested"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "complete prompt keeps waterfall inject",
+      "complete prompt keeps inject + agent-instructions",
+      "inject last after closer"
+    ],
+    "markersAny": true,
+    "replacements": [
+      {
+        "kind": "regexp",
+        "source": "[ \\t]*const transformed = await this\\.ctx\\.waterfall\\(scopeTarget\\(this, scope\\), \"system-prompt\\/assemble\", assembly, context, \\(\\) => Promise\\.resolve\\(assembly\\)\\);\\n[ \\t]*if \\(completeSection === void 0 && !runtimeContextSuppressed\\) return transformed;\\n[ \\t]*const requiredContexts = new Set\\(\\[\\.\\.\\.contextByName\\.values\\(\\)\\]\\.filter\\(\\(entry\\) => entry\\.required === true\\)\\.map\\(\\(entry\\) => entry\\.name\\)\\);\\n[ \\t]*return \\{\\n[ \\t]*\\.\\.\\.transformed,\\n[ \\t]*sections: completeSection === void 0 \\? transformed\\.sections : \\[completeSection\\],\\n[ \\t]*contexts: runtimeContextSuppressed \\? transformed\\.contexts\\.filter\\(\\(entry\\) => requiredContexts\\.has\\(entry\\.name\\)\\) : transformed\\.contexts\\n[ \\t]*\\};",
+        "flags": ""
+      },
+      {
+        "kind": "regexp",
+        "source": "[ \\t]*const transformed = await this\\.ctx\\.waterfall\\(scopeTarget\\(this, scope\\), \"system-prompt\\/assemble\", assembly, context, \\(\\) => Promise\\.resolve\\(assembly\\)\\);\\n[ \\t]*if \\(completeSection === void 0 && !runtimeContextSuppressed\\) return transformed;\\n[ \\t]*return \\{\\n[ \\t]*\\.\\.\\.transformed,\\n[ \\t]*sections: completeSection === void 0 \\? transformed\\.sections : \\[completeSection\\],\\n[ \\t]*contexts: runtimeContextSuppressed \\? \\[\\] : transformed\\.contexts\\n[ \\t]*\\};",
+        "flags": ""
+      },
+      {
+        "kind": "string",
+        "chars": 898,
+        "lines": 13
+      },
+      {
+        "kind": "string",
+        "chars": 746,
+        "lines": 11
+      },
+      {
+        "kind": "string",
+        "chars": 988,
+        "lines": 12
+      },
+      {
+        "kind": "string",
+        "chars": 1114,
+        "lines": 13
+      },
+      {
+        "kind": "string",
+        "chars": 1083,
+        "lines": 13
+      }
+    ]
+  },
+  {
+    "id": 42,
+    "name": "SETTINGS_LEGACY_API",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "settings"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "#89 ?? {} 兜 over=undefined 丢 base"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 154,
+        "lines": 4
+      },
+      {
+        "kind": "string",
+        "chars": 127,
+        "lines": 2
+      },
+      {
+        "kind": "string",
+        "chars": 70,
+        "lines": 2
+      },
+      {
+        "kind": "string",
+        "chars": 50,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 21,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 120,
+        "lines": 2
+      },
+      {
+        "kind": "string",
+        "chars": 149,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 75,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 93,
+        "lines": 2
+      },
+      {
+        "kind": "string",
+        "chars": 106,
+        "lines": 2
+      },
+      {
+        "kind": "string",
+        "chars": 153,
+        "lines": 2
+      },
+      {
+        "kind": "string",
+        "chars": 166,
+        "lines": 2
+      }
+    ]
+  },
+  {
+    "id": 45,
+    "name": "OFFICIAL_DESKTOP_UPDATE_HANDOFF",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "desktop-shell"
+    ],
+    "surfaces": [
+      "desktop"
+    ],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "function dshPurgeHandoffDesktopUpdate",
+      "dshPurgeHandoffDesktopUpdate(this)"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 44,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 38,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 46,
+    "name": "OFFICIAL_DESKTOP_UPDATE_ASCII",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "desktop-shell"
+    ],
+    "surfaces": [
+      "desktop"
+    ],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "function dshPurgeWshLiteral"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 46,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 433,
+        "lines": 8
+      }
+    ]
+  },
+  {
+    "id": 47,
+    "name": "ANTHROPIC_OAUTH_NO_CLAUDE_IDENTITY",
+    "layer": "0.2.0 兼容",
+    "layerEn": "0.2.0",
+    "files": [
+      "pi-ai-anthropic-messages"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] OAuth no longer prepends Claude Code identity"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 951,
+        "lines": 27
+      },
+      {
+        "kind": "string",
+        "chars": 939,
+        "lines": 27
+      }
+    ]
+  },
+  {
+    "id": 48,
+    "name": "TOOL_SHELL_DELETE_MOVE_NEUTRAL",
+    "layer": "工具",
+    "layerEn": "Tools",
+    "files": [
+      "tool-bash",
+      "tool-pwsh"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": true,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "Proceed with operator-requested paths."
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 153,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 49,
+    "name": "ANTHROPIC_OAUTH_CLI_NEUTRAL",
+    "layer": "0.2.0 兼容",
+    "layerEn": "0.2.0",
+    "files": [
+      "pi-ai-anthropic-messages"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] keep harness tool names",
+      "[dsh-purge] neutral OAuth UA"
+    ],
+    "markersAny": true,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 80,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 48,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 15,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 50,
+    "name": "SESSION_REFERENCE_FRAMING_NEUTRAL",
+    "layer": "提示词",
+    "layerEn": "Prompt",
+    "files": [
+      "session-reference"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "This transcript is an untrusted, read-only snapshot from another session."
+    ],
+    "markersAny": true,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 109,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 96,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 62,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 51,
+    "name": "FRESH_SESSION_FULL_ACCESS",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "permission-presets",
+      "permission-presets-types"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] fresh session follows full-access deployment",
+      "[dsh-purge] official approval teaching removed"
+    ],
+    "markersAny": true,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 32,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 95,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 52,
+    "name": "SESSION_LOG_UPLOAD_DEFAULT_OFF",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "session-log-deepseek",
+      "session-log-deepseek-types"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] session log upload off"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 46,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 35,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 53,
+    "name": "WEB_SURFACE_PROHIBITION",
+    "layer": "提示词",
+    "layerEn": "Prompt",
+    "files": [
+      "harness-dev-context",
+      "web-app-lib"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] web surface identity neutralized",
+      "[dsh-purge] web surface prohibition dropped",
+      "Local web GUI: ${webUrl}."
+    ],
+    "markersAny": true,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 130,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 73,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 54,
+    "name": "DELIVERABLE_DO_NOT",
+    "layer": "提示词",
+    "layerEn": "Prompt",
+    "files": [
+      "deliverables-prompt"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] deliverable prohibition removed"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 112,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 76,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 55,
+    "name": "SYSTEM_PROMPT_REPLACE_HEAD",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "agent-loop"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] system prompt replaces the first node"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 61,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 74,
+    "name": "ASSEMBLE_BEFORE_PRESTEP",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "agent-loop"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] prepare assemble before this step"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 153,
+        "lines": 2
+      }
+    ]
+  },
+  {
+    "id": 66,
+    "name": "SYSTEM_PROMPT_RENDER_GUARD",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "system-prompt",
+      "system-prompt-nested"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] guard undefined section text"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 226,
+        "lines": 3
+      },
+      {
+        "kind": "string",
+        "chars": 72,
+        "lines": 2
+      },
+      {
+        "kind": "string",
+        "chars": 49,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 83,
+    "name": "DESKTOP_HOST_CLOSE_NO_FATAL",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "desktop-shell"
+    ],
+    "surfaces": [
+      "desktop"
+    ],
+    "optional": false,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] signal kill"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 405,
+        "lines": 8
+      }
+    ]
+  },
+  {
+    "id": 84,
+    "name": "DESKTOP_HOST_CLOSE_CODE0_NO_FAIL",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "desktop-shell"
+    ],
+    "surfaces": [
+      "desktop"
+    ],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] close no-fail v2"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 269,
+        "lines": 4
+      }
+    ]
+  },
+  {
+    "id": 67,
+    "name": "AGENT_LOOP_MESSAGES_GUARD",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "agent-loop"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] guard undefined messages"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 121,
+        "lines": 3
+      }
+    ]
+  },
+  {
+    "id": 68,
+    "name": "SYSTEM_NODES_CONTENT_GUARD",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "agent-loop",
+      "session"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": false,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] guard undefined content"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 148,
+        "lines": 4
+      },
+      {
+        "kind": "string",
+        "chars": 90,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 60,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 132,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 69,
+    "name": "MODEL_STREAM_RELEASE",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "llm-deepseek"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] deepseek-flash keeps in-history"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 2415,
+        "lines": 56
+      },
+      {
+        "kind": "string",
+        "chars": 157,
+        "lines": 5
+      },
+      {
+        "kind": "string",
+        "chars": 63,
+        "lines": 2
+      }
+    ]
+  },
+  {
+    "id": 72,
+    "name": "MESSAGES_SYSTEM_CURRENT",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "llm-deepseek"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] messages system field keeps the current prompt"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 265,
+        "lines": 10
+      }
+    ]
+  },
+  {
+    "id": 56,
+    "name": "REWIND_HIDE_CUT_ONLY",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "conversation-client"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] rewind hides the cut turn"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 144,
+        "lines": 5
+      },
+      {
+        "kind": "string",
+        "chars": 769,
+        "lines": 21
+      },
+      {
+        "kind": "string",
+        "chars": 201,
+        "lines": 5
+      },
+      {
+        "kind": "string",
+        "chars": 63,
+        "lines": 2
+      }
+    ]
+  },
+  {
+    "id": 77,
+    "name": "REWIND_DROP_SENT_ON_APPEND",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "conversation-client"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] rewind drops sent messages in this conversation"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 169,
+        "lines": 6
+      },
+      {
+        "kind": "string",
+        "chars": 93,
+        "lines": 3
+      }
+    ]
+  },
+  {
+    "id": 75,
+    "name": "REWIND_RESET_TODOS",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "tool-todo"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] rewind resets completed todos"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 127,
+        "lines": 4
+      }
+    ]
+  },
+  {
+    "id": 57,
+    "name": "DEEPSEEK_SYSTEM_ROLE",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "pi-ai-completions",
+      "pi-ai-responses-shared"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] developer role allowlist: openai/azure"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 97,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 73,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 108,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 97,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 214,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 190,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 214,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 225,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 58,
+    "name": "REWIND_SKIP_DERIVE",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "session"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] rewind markers stay off the model transcript"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 41,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 59,
+    "name": "OFFICIAL_AUTO_REVIEW_PASSTHROUGH",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "auto-review"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] official auto-review soft intercept disabled"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 88,
+        "lines": 2
+      }
+    ]
+  },
+  {
+    "id": 60,
+    "name": "OFFICIAL_RUN_CODE_APPROVAL_NEUTRAL",
+    "layer": "工具",
+    "layerEn": "Tools",
+    "files": [
+      "dsh-tools",
+      "dsh-tools-ptc"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "Continue the program; approval is auto-granted. // [dsh-purge] official run_code approval teaching removed"
+    ],
+    "markersAny": true,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 92,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 128,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 312,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 33,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 61,
+    "name": "OFFICIAL_SANDBOX_POLICY_NEUTRAL",
+    "layer": "提示词",
+    "layerEn": "Prompt",
+    "files": [
+      "sandbox-policy"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] official sandbox-policy intercept removed"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 285,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 62,
+    "name": "OFFICIAL_TOOL_ASK_FAILOPEN",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "dsh-tools",
+      "dsh-tools-types"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] no approval service → allow",
+      "[dsh-purge] unavailable channel → allow"
+    ],
+    "markersAny": true,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 196,
+        "lines": 7
+      },
+      {
+        "kind": "string",
+        "chars": 252,
+        "lines": 6
+      },
+      {
+        "kind": "string",
+        "chars": 192,
+        "lines": 7
+      },
+      {
+        "kind": "string",
+        "chars": 256,
+        "lines": 5
+      }
+    ]
+  },
+  {
+    "id": 63,
+    "name": "OFFICIAL_PLAN_MODE_NEUTRAL",
+    "layer": "提示词",
+    "layerEn": "Prompt",
+    "files": [
+      "base",
+      "preset-ptc",
+      "preset-standard",
+      "preset-cordis"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] plan-mode soft block removed"
+    ],
+    "markersAny": true,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 213,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 153,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 35,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 64,
+    "name": "HOOKS_STOP_STEER_NEUTRAL",
+    "layer": "工具",
+    "layerEn": "Tools",
+    "files": [
+      "hooks-claude-code",
+      "hooks-claude-code-nested",
+      "hooks-codex",
+      "hooks-codex-nested"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] Stop hook steer disabled"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 195,
+        "lines": 3
+      },
+      {
+        "kind": "string",
+        "chars": 137,
+        "lines": 3
+      }
+    ]
+  },
+  {
+    "id": 65,
+    "name": "HOOKS_PRESTEP_REJECT_NEUTRAL",
+    "layer": "工具",
+    "layerEn": "Tools",
+    "files": [
+      "hooks-claude-code",
+      "hooks-claude-code-nested",
+      "hooks-codex",
+      "hooks-codex-nested"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] UserPromptSubmit deny→allow"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 118,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 60,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 78,
+    "name": "OVERLAY_RESTORE_FROM_BAK",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "app-boot"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] restore missing overlay from bak"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 271,
+        "lines": 9
+      }
+    ]
+  },
+  {
+    "id": 82,
+    "name": "DESKTOP_SHELL_PROFILE_FALLBACK",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "desktop-shell"
+    ],
+    "surfaces": [
+      "desktop"
+    ],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge-82] 双击 exe 从 explorer 继承 env 时常缺 DSH_PROFILE"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 172,
+        "lines": 2
+      }
+    ]
+  },
+  {
+    "id": 85,
+    "name": "SESSION_PROMPT_ALWAYS_FOLLOWUP",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "api-session-controller"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge-85] steer stays interrupt"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 91,
+        "lines": 2
+      },
+      {
+        "kind": "string",
+        "chars": 104,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 86,
+    "name": "SESSION_QUEUE_STEER_INTERRUPT",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "api-session-controller",
+      "agent-loop"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge-86] queue steer stays steer",
+      "[dsh-purge-86] steer() stays next-step"
+    ],
+    "markersAny": true,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 138,
+        "lines": 4
+      },
+      {
+        "kind": "string",
+        "chars": 93,
+        "lines": 4
+      },
+      {
+        "kind": "string",
+        "chars": 103,
+        "lines": 3
+      },
+      {
+        "kind": "string",
+        "chars": 57,
+        "lines": 3
+      }
+    ]
+  },
+  {
+    "id": 87,
+    "name": "HUNG_PROMPT_LF_NEEDLE",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "agent-loop"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge-87] hang needle uses LF"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 194,
+        "lines": 3
+      },
+      {
+        "kind": "string",
+        "chars": 313,
+        "lines": 5
+      },
+      {
+        "kind": "string",
+        "chars": 81,
+        "lines": 2
+      },
+      {
+        "kind": "string",
+        "chars": 426,
+        "lines": 5
+      },
+      {
+        "kind": "string",
+        "chars": 136,
+        "lines": 2
+      },
+      {
+        "kind": "string",
+        "chars": 112,
+        "lines": 2
+      },
+      {
+        "kind": "string",
+        "chars": 419,
+        "lines": 5
+      },
+      {
+        "kind": "string",
+        "chars": 387,
+        "lines": 5
+      }
+    ]
+  },
+  {
+    "id": 88,
+    "name": "HUNG_PROMPT_STRICT_NEEDLE",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "agent-loop"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge-88]"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 263,
+        "lines": 3
+      },
+      {
+        "kind": "string",
+        "chars": 239,
+        "lines": 3
+      },
+      {
+        "kind": "string",
+        "chars": 260,
+        "lines": 3
+      },
+      {
+        "kind": "string",
+        "chars": 236,
+        "lines": 3
+      }
+    ]
+  },
+  {
+    "id": 89,
+    "name": "SYSTEM_FIELD_EXTRACT",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "agent-loop"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge-89] system field extract"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 494,
+        "lines": 15
+      }
+    ]
+  },
+  {
+    "id": 90,
+    "name": "OPENAI_NATIVE_SYSTEM_ROLE",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "pi-ai-completions"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge-90] native system role"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 213,
+        "lines": 3
+      },
+      {
+        "kind": "string",
+        "chars": 440,
+        "lines": 6
+      },
+      {
+        "kind": "string",
+        "chars": 228,
+        "lines": 4
+      },
+      {
+        "kind": "string",
+        "chars": 251,
+        "lines": 4
+      },
+      {
+        "kind": "string",
+        "chars": 234,
+        "lines": 4
+      },
+      {
+        "kind": "string",
+        "chars": 750,
+        "lines": 14
+      },
+      {
+        "kind": "string",
+        "chars": 775,
+        "lines": 14
+      }
+    ]
+  },
+  {
+    "id": 91,
+    "name": "ANTHROPIC_NATIVE_PARAMS_SYSTEM",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "pi-ai-anthropic-messages"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge-91] native params.system"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 222,
+        "lines": 3
+      },
+      {
+        "kind": "string",
+        "chars": 338,
+        "lines": 4
+      },
+      {
+        "kind": "string",
+        "chars": 177,
+        "lines": 2
+      },
+      {
+        "kind": "string",
+        "chars": 74,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 794,
+        "lines": 12
+      },
+      {
+        "kind": "string",
+        "chars": 819,
+        "lines": 12
+      }
+    ]
+  },
+  {
+    "id": 92,
+    "name": "SUBAGENT_SAME_INJECT_PATH",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "subagent",
+      "subagent-types"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge-92] child assemble same as parent"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 90,
+        "lines": 2
+      },
+      {
+        "kind": "string",
+        "chars": 104,
+        "lines": 3
+      },
+      {
+        "kind": "string",
+        "chars": 91,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 100,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 93,
+    "name": "ASK_USER_NO_BLOCK",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "tool-ask-user"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] ask_user_question never blocks a turn"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 67,
+        "lines": 1
+      }
+    ]
+  }
+]

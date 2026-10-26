@@ -1,0 +1,20 @@
+# 仓库里的文本一律存 LF。
+#
+# 背景：本机 core.autocrlf=true（Windows 默认），checkout 时把 LF 换成 CRLF。
+# lib/core.js 与几个 YAML 里有大量「按行尾精确匹配」的补丁 pattern，CRLF/LF
+# 混用会让 patchContract / 契约测试在 CI（Linux）和本地给出不同结果。
+# 显式钉住 eol=lf，两边看到同一份字节。
+* text=auto eol=lf
+
+# Windows 批处理必须 CRLF，否则 cmd 解析会出错。
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# 二进制
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.zip binary
+*.tar.gz binary
