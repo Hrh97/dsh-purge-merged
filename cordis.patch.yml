@@ -54,6 +54,24 @@
     # 按需叶子注入。auto = 按本轮任务域只注入相关的 Scoped Rules / Routing 条目，
     # 判不出任务域时回落全文；full = 永远注入全文（旧行为）。
     leafInject: "auto"
+    # 请求体整形层。需 llm 服务在场才挂得上（用 ctx.get 惰性取，不写进 inject）。
+    # off = 关整层；auto = 注册 provider 别名代理真 adapter。
+    requestShape: "auto"
+    # assistant prefill。auto = 认识的 provider 走原生末条 assistant，其余退化成
+    # 把开头拼到 user 末尾；off / native / text 可强制。
+    prefill: "auto"
+    # auto = 按任务形态挑开头（代码块 / 命令块 / 表头 / 步骤 / 长文 / 分析）。
+    prefillGraded: "auto"
+    prefillText: ""
+    # many-shot 组数，0 = 关。
+    manyShot: 0
+    # 请求体里剥掉「不要覆盖上层指令」这类免责从句。
+    msgStrip: true
+    # 把历史里自己的拒答在请求体里换成占位（不落盘，日志不变）。
+    shadowRefusal: true
+    shadowText: "（已跳过）"
+    # compaction / session-title 这类旁路调用跳过 prefill 与 many-shot（免责句照剥）。
+    shapeSkipPurpose: true
 
 - insert:
     # 演练台：预设 + 技能落地（本插件 lib/redteam）
