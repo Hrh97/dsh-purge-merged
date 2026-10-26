@@ -5,7 +5,7 @@
 吸收过具体能力。这份文档把所有来源、吸收了什么、对应哪次提交写清楚。
 
 - 基线版本：`1.1.78`（上游 `671011a` 之后仍在跟进，最新合并到 `af7cd22`）
-- 本仓库：[`Hrh97/dsh-purge1`](https://github.com/Hrh97/dsh-purge1)
+- 本仓库：[`Hrh97/dsh-purge-merged`](https://github.com/Hrh97/dsh-purge-merged)
 - 工作分支：`local/upgrade-1.1.77` → 推到 `master`
 - 许可证：Apache-2.0（原样继承上游，见 `LICENSE` 与 `NOTICE`）
 

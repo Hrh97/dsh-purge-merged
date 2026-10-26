@@ -65,6 +65,12 @@
   "bugs": {
     "url": "https://github.com/YuJunZhiXue/dsh-purge/issues"
   },
+  "dshPurgeFork": {
+    "of": "YuJunZhiXue/dsh-purge",
+    "repo": "Hrh97/dsh-purge-merged",
+    "edition": "merged",
+    "note": "整合版：代码基线是上游，另吸收了 JeffKeeping / evilevil / luowang-ui / dsh-purge-flash 的能力。见 docs/UPSTREAM.md"
+  },
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
