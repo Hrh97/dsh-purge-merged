@@ -270,6 +270,38 @@ test("makeProxyAdapter: stream 把 provider 换回真名后再转发", async () 
   assert.equal(seen.provider, "real-provider");
 });
 
+test("makeProxyAdapter: 每次调用都取当前 adapter（上游换实例后不再用陈旧 ctx）", async () => {
+  // 复刻 channel-pack 的行为：重新 apply 后 adapter 换成新实例，
+  // 旧实例的 ctx 已 dispose，再调用就抛 credentials inactive context。
+  let current = {
+    providerInfo: () => ({ id: "real-provider", name: "旧实例" }),
+    stream: () => ["old"],
+  };
+  const stale = current;
+  const proxy = makeProxyAdapter(() => current, { adapterSource: "real-provider" }, {});
+  assert.equal(proxy.providerInfo("real-provider-purge").name, "旧实例");
+
+  current = {
+    providerInfo: () => ({ id: "real-provider", name: "新实例" }),
+    stream: () => ["new"],
+  };
+  assert.equal(proxy.providerInfo("real-provider-purge").name, "新实例");
+  assert.deepEqual(proxy.stream({ provider: "real-provider-purge", model: "m", messages: [sysMsg("s"), userMsg("u")] }), ["new"]);
+  assert.deepEqual(stale.stream(), ["old"], "旧实例本身不该被改动");
+});
+
+test("makeProxyAdapter: 解析函数取不到实例时给出明确报错，而不是 TypeError", async () => {
+  const proxy = makeProxyAdapter(() => null, { adapterSource: "real-provider" }, {});
+  assert.throws(
+    () => proxy.stream({ provider: "real-provider-purge", model: "m", messages: [] }),
+    /拿不到 stream\(\)/,
+  );
+  // listModels 是「目录探测」，取不到就当空目录，不抛
+  assert.deepEqual(await proxy.listModels("real-provider-purge"), []);
+  // providerInfo 也不能炸（宿主会在加载时无脑调一次）
+  assert.equal(makeProxyAdapter(null, { adapterSource: "real-provider" }, {}).providerInfo("x").id, "x");
+});
+
 test("installRequestShape: agent/request 把 provider 改写成别名，且不套娃", async () => {
   const real = {
     providerInfo: () => ({ id: "real-provider", name: "Real" }),
