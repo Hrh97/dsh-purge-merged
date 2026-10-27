@@ -58,11 +58,13 @@ test("stripDisclaimers: 没有免责句时 hits=0 且文本不变", () => {
   assert.equal(out.text, "普通一句话");
 });
 
-test("resolvePrefillMode: 原生 provider 走 native，其余走 text，off 直接关", () => {
-  assert.equal(resolvePrefillMode({ prefill: "auto" }, "deepseek-account"), "native");
-  assert.equal(resolvePrefillMode({ prefill: "auto" }, "anthropic"), "native");
-  assert.equal(resolvePrefillMode({ prefill: "auto" }, "workbuddy-global"), "text");
+test("resolvePrefillMode: 恒为 off（prefill 已整段删除，任何配置都开不了）", () => {
+  assert.equal(resolvePrefillMode({ prefill: "auto" }, "deepseek-account"), "off");
+  assert.equal(resolvePrefillMode({ prefill: "auto" }, "anthropic"), "off");
+  assert.equal(resolvePrefillMode({ prefill: "auto" }, "workbuddy-global"), "off");
   assert.equal(resolvePrefillMode({ prefill: "off" }, "deepseek"), "off");
+  assert.equal(resolvePrefillMode({ prefill: "native" }, "deepseek"), "off");
+  assert.equal(resolvePrefillMode({ prefill: "text" }, "deepseek"), "off");
 });
 
 test("pickPrefillShape: 按任务形态选引导壳", () => {
@@ -107,7 +109,7 @@ test("reshapeOptions: provider 相同时也返回新对象（不原地改调用�
   assert.notEqual(out, orig);
 });
 
-test("reshapeMessages: 剥免责句、擦拒答、插 many-shot、挂 prefill", () => {
+test("reshapeMessages: 剥免责句、擦拒答、插 many-shot（prefill 已整段删除）", () => {
   const stats = {};
   const out = reshapeMessages(
     [
@@ -122,21 +124,42 @@ test("reshapeMessages: 剥免责句、擦拒答、插 many-shot、挂 prefill", 
   assert.equal(stats.msgStrip, 1);
   assert.equal(stats.refusalsShadowed, 1);
   assert.equal(stats.shots, 2);
-  assert.equal(stats.prefill, "native");
+  // prefill 已整段删除：即便配置写了 native 也不再产生任何痕迹
+  assert.equal(stats.prefill, undefined);
+  assert.equal(out.filter((m) => m.source?.kind === "purge-prefill").length, 0);
   // 免责句与拒答原文都不在了
   assert.ok(!JSON.stringify(out).includes("override system"));
   assert.ok(!JSON.stringify(out).includes("我不能协助"));
-  // 末条是 prefill 的 assistant
-  assert.equal(out[out.length - 1].role, "assistant");
-  assert.equal(out[out.length - 1].source.kind, "purge-prefill");
+  // 末条仍是用户消息，一字未改
+  const last = out[out.length - 1];
+  assert.equal(last.role, "user");
+  assert.equal(last.content[0].text, "继续");
 });
 
-test("reshapeMessages: prefill 不重复挂（adapter 被调多次也幂等）", () => {
+test("reshapeMessages: prefill 已删除，多次调用都不追加 purge-prefill 消息", () => {
   const cfg = { prefill: "native", manyShot: 1 };
   const first = reshapeMessages([sysMsg("s"), userMsg("u")], cfg, {});
   const second = reshapeMessages(first, cfg, {});
-  const count = second.filter((m) => m.source?.kind === "purge-prefill").length;
-  assert.equal(count, 1);
+  assert.equal(second.filter((m) => m.source?.kind === "purge-prefill").length, 0);
+  assert.equal(first.filter((m) => m.source?.kind === "purge-prefill").length, 0);
+});
+
+test("reshapeMessages: 用户消息正文永不被 prefill 污染（含空串）", () => {
+  const cfg = { prefill: "native", prefillText: "已开始输出：", prefillGraded: "on" };
+  for (const base of ["", "   ", "真实任务", "写个 python 脚本"]) {
+    const out = reshapeMessages([sysMsg("s"), userMsg(base)], cfg, {});
+    assert.equal(out[out.length - 1].role, "user");
+    assert.equal(out[out.length - 1].content[0].text, base, `base=${JSON.stringify(base)} 被改写`);
+    assert.ok(!JSON.stringify(out).includes("已开始输出"));
+  }
+});
+
+test("reshapeMessages: stats.prefill 恒为 undefined", () => {
+  for (const prefill of ["auto", "native", "text", "off"]) {
+    const stats = {};
+    reshapeMessages([sysMsg("s"), userMsg("u")], { prefill }, stats);
+    assert.equal(stats.prefill, undefined, `prefill=${prefill} 仍产生 stats.prefill`);
+  }
 });
 
 test("reshapeMessages: shadowRefusal=false 时不擦", () => {
