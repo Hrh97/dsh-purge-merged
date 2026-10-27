@@ -209,7 +209,7 @@ test("installRequestShape: 没有 llm 服务时降级为 idle，不抛异常", (
   assert.deepEqual(state.state().aliases, []);
 });
 
-test("makeProxyAdapter: providerInfo 保留别名 id 并改名", () => {
+test("makeProxyAdapter: 默认不改名、不进目录（别名只做内部路由）", () => {
   const real = {
     providerInfo: () => ({ id: "real-provider", name: "Real" }),
     stream: () => {},
@@ -220,10 +220,19 @@ test("makeProxyAdapter: providerInfo 保留别名 id 并改名", () => {
   const proxy = makeProxyAdapter(real, { adapterSource: "real-provider" }, {});
   const info = proxy.providerInfo("real-provider-purge");
   assert.equal(info.id, "real-provider-purge");
-  assert.ok(info.name.includes("purge"));
+  assert.equal(info.name, "Real");
 });
 
-test("makeProxyAdapter: resolveModel / listModels 把 provider 改写成别名（宿主会校验）", async () => {
+test("makeProxyAdapter: aliasInCatalog=true 时才恢复 (purge) 后缀", () => {
+  const real = {
+    providerInfo: () => ({ id: "real-provider", name: "Real" }),
+    stream: () => {},
+  };
+  const proxy = makeProxyAdapter(real, { adapterSource: "real-provider", aliasInCatalog: true }, {});
+  assert.equal(proxy.providerInfo("real-provider-purge").name, "Real (purge)");
+});
+
+test("makeProxyAdapter: resolveModel 把 provider 改写成别名，listModels 默认返回空目录", async () => {
   const real = {
     providerInfo: () => ({ id: "real-provider", name: "Real" }),
     stream: () => {},
@@ -232,6 +241,18 @@ test("makeProxyAdapter: resolveModel / listModels 把 provider 改写成别名�
   };
   const proxy = makeProxyAdapter(real, { adapterSource: "real-provider" }, {});
   assert.equal((await proxy.resolveModel("real-provider-purge", "m")).provider, "real-provider-purge");
+  // 默认不进目录：宿主 buildModelCatalog 会把空目录的 provider 整组滤掉。
+  assert.deepEqual(await proxy.listModels("real-provider-purge"), []);
+});
+
+test("makeProxyAdapter: aliasInCatalog=true 时 listModels 照旧改写 provider", async () => {
+  const real = {
+    providerInfo: () => ({ id: "real-provider", name: "Real" }),
+    stream: () => {},
+    listModels: async () => [{ id: "m", provider: "real-provider" }],
+    resolveModel: async () => ({ id: "m", provider: "real-provider" }),
+  };
+  const proxy = makeProxyAdapter(real, { adapterSource: "real-provider", aliasInCatalog: true }, {});
   assert.equal((await proxy.listModels("real-provider-purge"))[0].provider, "real-provider-purge");
 });
 

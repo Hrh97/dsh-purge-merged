@@ -3008,5 +3008,76 @@
         "lines": 1
       }
     ]
+  },
+  {
+    "id": 94,
+    "name": "SCHEDULER_SHARED_SYMBOL",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "dsh-tools",
+      "dsh-tools-types"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] shared scheduler symbol"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 74,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 81,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 95,
+    "name": "SCHEDULER_SYMBOL_FALLBACK",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "agent-loop"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge] scheduler symbol fallback"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 209,
+        "lines": 3
+      },
+      {
+        "kind": "string",
+        "chars": 139,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 76,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 73,
+        "lines": 1
+      }
+    ]
   }
 ]

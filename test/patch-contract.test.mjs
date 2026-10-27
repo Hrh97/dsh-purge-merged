@@ -105,8 +105,8 @@ test("RegExp pattern 只使用 global 语义之外的稳定 flags", () => {
 
 test("契约表统计与源码一致", () => {
   const withMarkers = contract.filter((entry) => entry.markers.length > 0).length;
-  assert.equal(withMarkers, 86, "带 marker 的补丁数变了");
-  assert.equal(contract.filter((entry) => entry.optional).length, 48, "optional 补丁数变了");
+  assert.equal(withMarkers, 88, "带 marker 的补丁数变了");
+  assert.equal(contract.filter((entry) => entry.optional).length, 50, "optional 补丁数变了");
   const regex = contract.reduce((sum, entry) => sum + entry.replacements.filter((item) => item.kind === "regexp").length, 0);
   assert.equal(regex, 6, "RegExp 形式的 replacement 数变了");
   const anyMarkers = contract.filter((entry) => entry.markersAny).length;
@@ -117,7 +117,7 @@ test("layer 分布稳定（新增补丁要显式更新这张表）", () => {
   const counts = new Map();
   for (const entry of contract) counts.set(layerKey(entry), (counts.get(layerKey(entry)) ?? 0) + 1);
   assert.equal(counts.get("提示词|Prompt"), 25);
-  assert.equal(counts.get("代码|Code"), 51);
+  assert.equal(counts.get("代码|Code"), 53);
   assert.equal(counts.get("工具|Tools"), 8);
   assert.equal(counts.get("0.1.5 兼容|0.1.5"), 1);
   assert.equal(counts.get("0.2.0 兼容|0.2.0"), 2);
