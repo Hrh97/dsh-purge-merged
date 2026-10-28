@@ -38,6 +38,7 @@
     "build:client": "node scripts/build-client.mjs",
     "postinstall": "node scripts/ensure-profile-bundle.mjs",
     "test": "node --test",
+    "test:update-rollback": "node scripts/official-update-rollback.mjs",
     "contract": "node scripts/gen-patch-contract.mjs",
     "contract:check": "node scripts/gen-patch-contract.mjs --check"
   },

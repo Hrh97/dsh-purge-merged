@@ -20,7 +20,10 @@
  * 安全边界：全部夹具、junction、fake exe / fake installer 都在本次运行的临时目录内，
  * 测试不接触真实安装目录、不 taskkill 真实进程、不运行真实安装器。
  *
- * 用法：node scripts/test-official-update-rollback.mjs [--keep]
+ * 用法：node scripts/official-update-rollback.mjs [--keep]
+ *
+ * 不叫 test-*.mjs：`npm test`（node --test）会按文件名收集，Linux CI 会
+ * 立刻在 junction/cscript 上炸掉。本脚本只在 Windows 上手动跑。
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -28,6 +31,10 @@ import os from "node:os";
 import { spawnSync, spawn } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
+
+if (process.env.NODE_TEST_CONTEXT) {
+  process.exit(0);
+}
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PLUGIN_ROOT = path.dirname(HERE);
@@ -198,6 +205,10 @@ async function recreateAppWithJunction(fx, logPath) {
 }
 
 async function main() {
+  if (process.platform !== "win32") {
+    console.log("skip: official-update-rollback 需要 Windows（cscript / junction）");
+    process.exit(0);
+  }
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "dsh-purge-update-regress-"));
   console.log(`夹具根: ${root}\n`);
 

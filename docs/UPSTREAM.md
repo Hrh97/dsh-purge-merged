@@ -159,7 +159,7 @@ many-shot、历史拒答擦除、免责句剥离。
 - `lib/official-update.wscript`：`occupied()` 扫安装目录占用进程；`killAll /F /T`；更新前 `rmdir app\runtime`（`dropped-legacy-runtime-link`）；占用未清就 `abort-busy` 不跑安装器；失败把并发重建的 app `MoveFolder` 到 `app.dshpurge-failed-<ts>`（`isolated-app`），不再 `DeleteFolder`。
 - `lib/official-update.js`：`updateOutcomeOf`（成功 = `exitCode===0 && resourcesOk`）、`isCleanableStaleDir`、`clearStaleExtractedApps` 返回 `{ok,removed,rejected,errors}`。保留本地 `harnessExeName` 对 `dsh next.exe` / `dsh-next.exe` 的识别。
 
-回归：`scripts/test-official-update-rollback.mjs`（夹具在临时目录，不碰真实安装、不杀真进程）。
+回归：`scripts/official-update-rollback.mjs`（Windows 夹具，不进 `npm test`；夹具在临时目录，不碰真实安装、不杀真进程）。
 
 ### 6. `ADWMC/helm-d`、`Rain-kl/dsh-preset-plus`、`Jueze-2019/dsh-redteam-mode`、
 `z91772524-ai/dsh-pojia-mode`、`PerryLink/dsh-defend` — 只调研，没有代码进入
