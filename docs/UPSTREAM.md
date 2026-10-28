@@ -187,6 +187,7 @@ many-shot、历史拒答擦除、免责句剥离。
 | `47a032a` | **按需叶子注入** `lib/leaf-inject.js`：常驻骨架 ~1.5k tok，任务域叶子按需挂，总体 5.7k → 2.4~4.9k；判不出任务域就放行全文 |
 | `b01ab49` | **补丁契约表 + 75 条离线断言 + CI**，并修掉契约表当场抓出的 `#73` 假 applied（与 `#70` 共用 marker 导致 `skipIfMarked` 直接跳过） |
 | `3eddeb4` | **备份只写真原件基线**（`backupAll()` 原来 bak 缺失就用「已打补丁的内容」补一份假备份，`revertAll` 拷回去什么都没还原却报成功） |
+| （本提交） | **qoder-purge**：Qoder CN `app.asar` 三层补丁（提示词表替换 / `permissionMode:"bypassPermissions"` / Electron fuse `EnableEmbeddedAsarIntegrityValidation` 0x31→0x30）。换件对照官方更新硬链接树：`occupied()` 扫版本目录占用；交互模式 `killAll /F /T`，未清 `abort-busy`；`--auto` 占用只 skip 不杀。活 asar 先 rename 到 `.purge-swap-prev` 再就位 `.purge-new`，删不掉则隔离 `.purge-failed-<ts>`，不再 `rmSync` 活 asar |
 
 ---
 

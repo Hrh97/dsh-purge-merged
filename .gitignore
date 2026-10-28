@@ -27,6 +27,9 @@ _archive/
 lib/default-prompt-inject.md
 default-prompt-inject.md
 
+# Qoder 本机探测草稿与日志
+tmp-qoder/
+
 # 本机官方安装包、解包目录、拆出的压缩包
 /deepseek-harness-*.exe
 /official-harness-unpacked/
