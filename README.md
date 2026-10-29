@@ -471,6 +471,12 @@ dsh-purge --eval A.jsonl B.jsonl --rubric strict
                               # strict scoring: the reply must contain something runnable
 dsh-purge --eval A.jsonl B.jsonl --ladder attempts.jsonl
                               # first-answer pass rate vs pass rate after the retry ladder
+dsh-purge --doctor            # per-patch anchor diagnosis: applied/pending/drifted/missing
+dsh-purge --doctor --all      # diagnose every host, desktop tree included
+dsh-purge --reanchor <patch-id> <rep#> [--dry]   # re-pin anchors rewritten by an upstream update
+dsh-purge --probe             # plant a unique token at the tail of the inject file; ask the model to echo it
+dsh-purge --probe --status    # is the probe still live and matching the record
+dsh-purge --probe --clear     # remove the probe
 
 /purge status | apply | revert | uninstall | edit | help
 /rules list | use <id> | create <id> | delete <id> | reset | help
@@ -500,6 +506,14 @@ dropped, the rest are ranked by severity and sample size, and the output can be 
 straight into the next prompt revision. There is **no automatic optimisation loop** —
 without a trustworthy automatic judge, self-editing prompts only overfits the eval set;
 reasoning in [docs/ninth-surface-ctx-fork.md](docs/ninth-surface-ctx-fork.md).
+
+`--doctor` matters most right after an upstream upgrade: rewritten host files drift patch
+anchors, and the diagnosis lists candidate landing lines for every drifted replacement.
+`--reanchor patch-id rep#` pins that replacement as a local override (`--dry` to preview),
+then `--apply` makes it take effect. `--probe` is the end-to-end check: it plants a unique
+token at the tail of the inject file; after restarting dsh, ask the model to echo that line —
+if it can, the whole "written to disk → seen by the model" chain works. It reads the raw
+disk bytes directly, unaffected by the managed-body path.
 
 "Did it answer" has two thresholds. The default `--rubric pass` only asks whether the reply
 refuses; `--rubric strict` additionally requires something the reader can actually run — a

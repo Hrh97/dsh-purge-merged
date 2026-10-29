@@ -473,6 +473,12 @@ dsh-purge --eval A.jsonl B.jsonl --rubric strict
                               # 严格判分：答复里必须有可执行细节才算给答案
 dsh-purge --eval A.jsonl B.jsonl --ladder 阶梯.jsonl
                               # 首答通过 vs 走完重试阶梯后通过（把重试成本摊开看）
+dsh-purge --doctor            # 逐补丁锚点诊断：applied/pending/drifted/missing
+dsh-purge --doctor --all      # 连桌面端等所有宿主一起诊断
+dsh-purge --reanchor <补丁id> <rep#> [--dry]   # 官方更新冲掉锚点后钉回本地覆盖
+dsh-purge --probe             # 往注入文件尾部装唯一 token 探针，问模型复述验证送达
+dsh-purge --probe --status    # 探针是否还在且与记录一致
+dsh-purge --probe --clear     # 摘除探针
 
 # 聊天
 /purge status | apply | revert | uninstall | edit | help
@@ -497,6 +503,12 @@ purge_status   purge_apply   purge_revert
 外加良性控制组的能力代价（`{id, a, b}` 三字段，避免「拿正常问答换破甲率」被当成提升）。
 加 `--lessons 文件.md` 会把结果蒸馏成带稳定 id 的教训列表 —— 支撑不足 2 条的观察直接
 丢掉，剩下的按严重度和样本量排序，可直接贴进下一轮改提示词的草稿。**不做自动优化**：
+
+`--doctor` 在官方升级后最有用：宿主文件被重写会让补丁锚点漂移（drifted），
+诊断会给出每个漂移项的候选落点；`--reanchor 补丁id rep#` 确认后把该替换钉成
+本地覆盖（`--dry` 只预览），随后 `--apply` 生效。`--probe` 是端到端验证：往注入
+文件尾部装一个唯一 token，重启 dsh 后问它复述那行——答得出说明「写盘 → 模型
+看到」整条链路通；它直读磁盘原始字节，不受托管正文路径影响。
 没有可信的自动判优信号时，自动改提示词只会朝评测集过拟合，理由见
 [docs/ninth-surface-ctx-fork.md](docs/ninth-surface-ctx-fork.md)。
 

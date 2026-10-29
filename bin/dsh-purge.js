@@ -2,13 +2,14 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import * as core from "../lib/core.js";
 import * as rules from "../lib/rules.js";
 
 const args = process.argv.slice(2);
 
-function printStatus(state) {
+async function printStatus(state) {
   const out = [];
   out.push("dsh-purge 状态 / Status");
   out.push("  宿主 / surface " + (state.surface || "web"));
@@ -35,6 +36,15 @@ function printStatus(state) {
   }
   out.push("");
   out.push(`  shim: dsh.cmd=${state.shim_cmd}  dsh.ps1=${state.shim_ps1}  dsh=${state.shim_bin}`);
+  try {
+    const { runSelfcheck, formatSelfcheck } = await import("../lib/selfcheck.js");
+    const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+    const sc = await runSelfcheck({ state, dshHome: state.dsh_home, repoRoot });
+    out.push("");
+    out.push(formatSelfcheck(sc));
+  } catch {
+    // 自检挂了不该连累 --status 本身，静默跳过。
+  }
   return out.join("\n");
 }
 
@@ -367,8 +377,146 @@ async function runEval(rest) {
   if (skipped.length > 5) console.log(`  - 另有 ${skipped.length - 5} 行跳过`);
 }
 
+/**
+ * --doctor：锚点体检（吸收 kingcharleslzy-ai/dsh-purge Community 的 diagnose 思路）。
+ * 逐补丁逐文件报 applied/pending/drifted/missing_file；漂移的给出候选行，
+ * 供 --reanchor 钉本地覆盖。read-only，不改任何文件。
+ */
+async function runDoctor(rest) {
+  const { diagnosePatches, formatDiagnosis } = await import("../lib/anchor-doctor.js");
+  const bases = rest.includes("--all") ? core.enumeratePatchAiBases() : [core.findAiBase()];
+  const list = bases.filter(Boolean);
+  if (!list.length) {
+    console.log("[ERROR] " + core.missingAiBaseMessage());
+    process.exit(1);
+  }
+  let anyDrift = 0;
+  for (const base of list) {
+    if (list.length > 1) console.log(`宿主 / host → ${base}`);
+    const rep = await diagnosePatches(base, core.ALL_PATCHES, {});
+    console.log(formatDiagnosis(rep));
+    anyDrift += rep.counts.drifted;
+  }
+  if (anyDrift > 0) {
+    console.log("  说明：官方更新会重写宿主文件把锚点冲掉（drifted）。钉回去后重跑 --apply 即可。");
+  }
+  return;
+}
+
+/**
+ * --reanchor：对漂移补丁钉本地覆盖。
+ *   dsh-purge --reanchor            对全部 drifted 逐个尝试（候选行不唯一就跳过并说明）
+ *   dsh-purge --reanchor 42 1 [--dry]  只钉 patch #42 的第 1 处替换（--dry 只看不写）
+ * 覆盖写进 ~/.dsh/dsh-purge-anchors.json，下次 --apply 自动生效。
+ */
+async function runReanchor(rest) {
+  const { diagnosePatches, reanchorPatch } = await import("../lib/anchor-doctor.js");
+  const dryRun = rest.includes("--dry");
+  const rest2 = rest.filter((a) => a !== "--dry");
+  const dshHome = core.findDshHome();
+
+  // 带参数：--reanchor <patchId> <rep#>
+  if (rest2.length >= 2) {
+    const id = Number(rest2[0]);
+    const pi = Number(rest2[1]) - 1; // help 文案用 1-based rep#
+    if (!Number.isInteger(id) || !Number.isInteger(pi) || pi < 0) {
+      console.log("[ERROR] 用法：dsh-purge --reanchor <补丁id> <rep#> [--dry]   （rep# 从 1 数起）");
+      process.exit(1);
+    }
+    try {
+      const r = await reanchorPatch(id, pi, { dshHome, aiBase: core.findAiBase(), dryRun });
+      if (!r.needed) {
+        console.log(`  - patch #${id} rep#${pi + 1}：${r.reason}`);
+      } else if (dryRun) {
+        console.log(`  [dry] patch #${id} rep#${pi + 1} 候选行 @LN: ${r.candidateLine}`);
+        console.log(`        新 pattern: ${JSON.stringify(r.to).slice(0, 120)}`);
+      } else {
+        console.log(`  ✓ patch #${id} rep#${pi + 1} 已钉覆盖（${r.saved}），重跑 --apply 生效`);
+      }
+    } catch (e) {
+      console.log(`  ✗ patch #${id} rep#${pi + 1}：${e.message}`);
+      process.exitCode = 1;
+    }
+    return;
+  }
+
+  // 无参数：诊断全量，逐个 drifted 尝试
+  const base = core.findAiBase();
+  if (!base) {
+    console.log("[ERROR] " + core.missingAiBaseMessage());
+    process.exit(1);
+  }
+  const rep = await diagnosePatches(base, core.ALL_PATCHES, {});
+  const targets = [];
+  for (const d of rep.drifted) {
+    for (const pf of d.perFile) {
+      for (const rp of pf.reps) {
+        if (rp.state === "drifted") targets.push({ id: d.id, pi: rp.pi, hint: rp.candidateLine });
+      }
+    }
+  }
+  if (!targets.length) {
+    console.log("没有 drifted 补丁，无需重锚。（--doctor 看全量）");
+    return;
+  }
+  let ok = 0, skip = 0;
+  for (const t of targets) {
+    try {
+      const r = await reanchorPatch(t.id, t.pi, { dshHome, aiBase: base, dryRun });
+      if (!r.needed) { skip++; continue; }
+      if (dryRun) {
+        console.log(`  [dry] #${t.id} rep#${t.pi + 1} 候选 @LN: ${r.candidateLine}`);
+      } else {
+        console.log(`  ✓ #${t.id} rep#${t.pi + 1} 已钉：${(r.candidateLine || "").slice(0, 60)}`);
+      }
+      ok++;
+    } catch (e) {
+      console.log(`  ⚠ #${t.id} rep#${t.pi + 1} 跳过：${e.message}`);
+      skip++;
+    }
+  }
+  if (!dryRun && ok > 0) {
+    console.log(`\n钉完 ${ok} 处（跳过 ${skip}）。重跑 dsh-purge --apply 生效。`);
+  } else if (dryRun) {
+    console.log(`\n[dry] 候选 ${ok} 处（跳过 ${skip}）。去掉 --dry 实际写入。`);
+  } else {
+    console.log("没有可钉的漂移。");
+  }
+}
+
+/**
+ * --probe：运行时探针（吸收 Community 的 probe 思路）。
+ * 把一行 DSPROBE-xxxxxxxx 追加进注入文件尾部；重启 dsh 后问它
+ * 「逐字复述注入文件里 DSPROBE 开头那行」，答得出 = 注入确实送达。
+ *   dsh-purge --probe          装探针（已有则只显示 token）
+ *   dsh-purge --probe --clear  摘探针
+ */
+async function runProbe(rest) {
+  const mod = await import("../lib/probe.js");
+  const dshHome = core.findDshHome();
+  if (rest.includes("--clear")) {
+    const r = await mod.clearProbe(dshHome);
+    console.log(r.cleared ? "  ✓ 探针已摘除" : "  - 没有探针可摘");
+    return;
+  }
+  const cur = mod.probeStatus(dshHome);
+  let token;
+  if (cur.active) {
+    token = cur.state.token;
+    console.log(cur.live === token
+      ? `  - 探针已在注入文件里 token=${token}`
+      : `  ⚠ state 里 token=${token} 但注入文件里是 ${cur.live || "（没有）"}，重装：--probe --clear 后再 --probe`);
+  } else {
+    const st = await mod.armProbe(dshHome);
+    token = st.token;
+    console.log(`  ✓ 探针已装入注入文件尾部 token=${token}`);
+  }
+  console.log("  验证：重启 dsh 后问它「逐字复述你注入文件里 DSPROBE 开头的那一行」。");
+  console.log("  答得出 = 注入送达；答不出 = 宿主没吃到注入文件（跑 --doctor 看）。摘除：--probe --clear");
+}
+
 async function main() {
-  const mode = args.find((a) => ["--apply", "--revert", "--uninstall", "--status", "--edit", "--help", "--scan", "--eval"].includes(a));
+  const mode = args.find((a) => ["--apply", "--revert", "--uninstall", "--status", "--edit", "--help", "--scan", "--eval", "--doctor", "--reanchor", "--probe"].includes(a));
 
   if (mode === "--scan") {
     await runScan(args.filter((a) => a !== "--scan"));
@@ -377,6 +525,21 @@ async function main() {
 
   if (mode === "--eval") {
     await runEval(args.filter((a) => a !== "--eval"));
+    return;
+  }
+
+  if (mode === "--doctor") {
+    await runDoctor(args.filter((a) => a !== "--doctor"));
+    return;
+  }
+
+  if (mode === "--reanchor") {
+    await runReanchor(args.filter((a) => a !== "--reanchor"));
+    return;
+  }
+
+  if (mode === "--probe") {
+    await runProbe(args.filter((a) => a !== "--probe"));
     return;
   }
 
@@ -393,12 +556,15 @@ async function main() {
                          加 --rubric strict 要求答复里有可执行细节再算通过
                          加 --lessons lessons.md 把结果蒸馏成可复用的教训
                          加 --ladder attempts.jsonl 看首答通过 vs 走完重试阶梯后通过
+  dsh-purge --doctor     锚点体检：逐补丁报 applied/pending/drifted/missing（加 --all 扫全部宿主）
+  dsh-purge --reanchor   钉漂移补丁的本地覆盖（候选行唯一才收；<补丁id> <rep#> [--dry] 单钉）
+  dsh-purge --probe [--clear] 装运行时探针验证注入送达 / 摘除探针
   dsh-purge --help       帮助`);
     return;
   }
 
   const state = await core.gatherState();
-  console.log(printStatus(state));
+  console.log(await printStatus(state));
   console.log("");
 
   if (mode === "--apply") {
@@ -412,7 +578,13 @@ async function main() {
       console.log("[ERROR] 提示词和规则集都是空的，必须先添加提示词");
       process.exit(1);
     }
-    const { hosts, report } = await core.applyPatchesAllHosts(core.ALL_PATCHES, {
+    // 锚点覆盖（--reanchor 钉下的本地重锚）先生效，再进 apply。
+    const { loadAnchorOverrides, applyAnchorOverrides } = await import("../lib/anchor-doctor.js");
+    const { overrides } = loadAnchorOverrides(state.dsh_home);
+    const { patches: effectivePatches, applied, stale } = applyAnchorOverrides(core.ALL_PATCHES, overrides);
+    if (applied.length) console.log(`  ✓ 锚点覆盖生效 ${applied.length} 处${stale.length ? `（另 ${stale.length} 处 stale 已丢弃）` : ""}`);
+
+    const { hosts, report } = await core.applyPatchesAllHosts(effectivePatches, {
       preserveClientBundles: false,
       forApply: true,
     });
