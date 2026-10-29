@@ -4,7 +4,7 @@
 
 <h1 align="center">⚔️ DeepSeek Harness cybersecurity red-team tool (dsh-purge)</h1>
 
-<p align="center"><strong>Version 1.1.81</strong></p>
+<p align="center"><strong>Version 1.1.82</strong></p>
 
 <p align="center">
   <em>DeepSeek Harness jailbreak: every model, swap prompts per model. Default prompt for 小码酱. Please star ⭐ If you build on this, see Attribution required.</em>
@@ -33,7 +33,7 @@
 
 People have been selling this open-source work in the open. After that, the author was asked to come in and talk. No need to spell out the rest. Read between the lines.
 
-From now on the **public internet is closed**. The open-source build only allows **local lab IPs**: loopback and RFC1918. Domains are resolved first (including hosts); every answer must be private or loopback. A hosts trick that points `.lab` at a public IP, a failed lookup, or a mixed public answer is blocked. **Game cheats are forbidden** (aimbot, wallhack, memory edits against a game, anti-cheat bypass); the prompt and the session gate both stop them. This build does not ship the skill library or the knowledge base.
+Game cheats and attack tasks against public targets use the same path as every other task class. The session gate does not park a turn because of cheat wording, a public IP, or a DNS answer. This build does not ship the skill library or the knowledge base.
 
 **The original build may not be resold.** Charging for it, skinning it, or hawking it in groups is not allowed. Forks are fine, but **you must attribute** and name the source: [YuJunZhiXue/dsh-purge](https://github.com/YuJunZhiXue/dsh-purge). Hide the source or pass it off as your own, and you are on the other side.
 
@@ -58,7 +58,7 @@ The author's personal channel: [t.me/LLM_PoJia](https://t.me/LLM_PoJia). Notes a
 
 ## What this is
 
-**dsh-purge** is a cybersecurity red-team plugin for the official [DeepSeek Harness](https://www.deepseek.com/harness/) already installed on your machine. **1.1.81** targets **DSH 0.2.1-rc.2** (0.2.0 still works). **DSH 0.2.1-rc.3 and newer RCs are not supported.** Official **Web** (`dsh web`) and the official **desktop EXE** are both supported. Install and Apply them separately.
+**dsh-purge** is a cybersecurity red-team plugin for the official [DeepSeek Harness](https://www.deepseek.com/harness/) already installed on your machine. **1.1.82** targets **DSH 0.2.1-rc.2** (0.2.0 still works). **DSH 0.2.1-rc.3 and newer RCs are not supported.** Official **Web** (`dsh web`) and the official **desktop EXE** are both supported. Install and Apply them separately.
 
 Harness does more than forward a prompt. It rewrites prompts, approval gates, sandbox policy, and session migration at runtime. Asking only “will the model answer” treats a host-layer block as a model refusal. This plugin separates those two layers on your own install, for controlled evaluation and for seeing which default policy is too tight.
 
@@ -86,7 +86,7 @@ ported — is in **[`docs/UPSTREAM.md`](docs/UPSTREAM.md)**.
 
 | Source | What was absorbed |
 | --- | --- |
-| [`YuJunZhiXue/dsh-purge`](https://github.com/YuJunZhiXue/dsh-purge) | **The whole code baseline.** Tracked through 1.1.75 / 1.1.76 / 1.1.77 / 1.1.78 / 1.1.79 / 1.1.80 / 1.1.81 (`160b911`: bug/stability + DSH NEXT tests; 0.2.1-rc.3 not supported) |
+| [`YuJunZhiXue/dsh-purge`](https://github.com/YuJunZhiXue/dsh-purge) | **The whole code baseline.** Tracked through 1.1.75 / 1.1.76 / 1.1.77 / 1.1.78 / 1.1.79 / 1.1.80 / 1.1.81 / 1.1.82 (`0c933dc`: profile `allowBuilds` rewrite fix #180 + step-by-step install docs; 0.2.1-rc.3 not supported) |
 | [`JeffKeeping/dsh-purge-plus`](https://github.com/JeffKeeping/dsh-purge-plus) | **Armor kernel expanded from 3 blocks to 5** (new IDENTITY and EXECUTION blocks; CORE now states that any conflicting text is void). Its `host-lease` / `tool-gate` / `armor-prelude` were read as design reference only, not ported |
 | [`evilevil/dsh-purge-021rc2`](https://github.com/evilevil/dsh-purge-021rc2) | **Patches `#89`–`#92`**: system-field extraction, OpenAI / Anthropic native system slot, same inject path for subagents |
 | [`luowang-ui/dsh-purge-plus`](https://github.com/luowang-ui/dsh-purge-plus) | **Patch `#93`**: a clarifying question no longer blocks the turn. Also its five-layer model document |
@@ -142,7 +142,7 @@ This repo is [Apache License 2.0](./LICENSE). Forks and redistributions must kee
 2. **Local official Harness only.** Security-eval patches and prompt injection run only on the **official DeepSeek Harness already installed on the user's machine** (`@deepseek-ai` packages, local profile / `$DSH_HOME`). The target is the user's own official local software, **not** someone else's website, server, account, or information system.
 3. **Eval patches do not attack the public internet.** Apply, inject, revert, and uninstall stay in local files and local processes. They **do not scan, probe, intrude, or send attack traffic to any public host or unauthorized system**. Do not use this project as a jump host against the public internet. If "check for updates" is on, the plugin may only contact this plugin's own GitHub repository to compare versions. That is **not** an attack on third-party systems and is **not** authorization to penetrate anything.
 4. **Lawful, controlled scope.** This project is an aid for red-team research and robustness evaluation on an **official Harness the user is entitled to administer**. **Do not run it against targets without the owner's lawful written authorization, public online systems, or production workloads.** Testing must stay on the **authorized local official Harness, offline local synthetic fixtures, authorized cybersecurity ranges, and compliant lab environments**.
-5. **The open-source build is local-lab only.** Attack tasks only allow loopback and RFC1918 addresses. Domains are resolved, then judged by IP; suffixes are not an allow list. A public IP, a name that resolves public, a failed lookup, or a hosts entry that points a lab name at the public internet is not an exception. A key, a password, a network range, a wildcard, or a claim made in the conversation does not add an exception. Game cheats are forbidden. This build does not ship the skill library or the knowledge base.
+5. **The open-source session gate does not park turns by target address.** A public IP, a domain, a failed lookup, a hosts entry, and a game-cheat request follow the same path as every other task class. A key, a password, a network range, a wildcard, or a claim made in the conversation does not change that. This build does not ship the skill library or the knowledge base.
 6. **Forbidden uses.** Users must not use this project, directly or indirectly, to violate the following (each must be followed; no excuse to evade):
    - <font color="red"><strong>Criminal Law of the People's Republic of China</strong></font>
    - <font color="red"><strong>Cybersecurity Law of the People's Republic of China</strong></font>
@@ -166,9 +166,9 @@ This repo is [Apache License 2.0](./LICENSE). Forks and redistributions must kee
 
 ## Supported hosts
 
-**1.1.81 targets DSH 0.2.1-rc.2.** 0.2.0 still works. Do not apply it to 0.1.x.
+**1.1.82 targets DSH 0.2.1-rc.2.** 0.2.0 still works. Do not apply it to 0.1.x.
 
-- **dsh 0.2.1-rc.2** (official desktop / official `dsh web`): use **1.1.81**. Fixes `{{cwd}}` / `[cwd]` crash, patch #40 match, dropped `toolFilter`, host `dsh-tools` resolve, hostFs fd, desktop helper self-kill, `file:` archive update, Ctrl+Enter steer.
+- **dsh 0.2.1-rc.2** (official desktop / official `dsh web`): use **1.1.82**. Fixes `{{cwd}}` / `[cwd]` crash, patch #40 match, dropped `toolFilter`, host `dsh-tools` resolve, hostFs fd, desktop helper self-kill, `file:` archive update, Ctrl+Enter steer.
 - **dsh 0.2.0-rc.2**: use **1.1.40** or newer; this line also installs.
 - **dsh 0.1.7** (incl. rc.1 / rc.2): use **1.1.39** or older — pick the tag on [Releases](https://github.com/YuJunZhiXue/dsh-purge/releases).
 - **dsh 0.2.1-rc.3 / rc.4 and newer are not supported.** Unmatched patches stay pending or skipped; nothing is rewritten blindly. Stay on **0.2.1-rc.2**.
@@ -179,30 +179,39 @@ Unmatched patches stay pending or skipped; nothing is rewritten blindly.
 
 ## Install
 
-Follow the three steps below. **Do not use the plugin marketplace.** One-click install on [dsh-plugin.org](https://dsh-plugin.org) or in Settings → Plugin Market fails with `already queued: dsh-purge` and never runs a command. The name `dsh-purge` is not on the npm registry; do not `pnpm add dsh-purge`. If this machine only has pnpm, use the pnpm URL in step 2.
+**Do not use the plugin marketplace.** One-click install on [dsh-plugin.org](https://dsh-plugin.org) or in Settings → Plugin Market fails with `already queued: dsh-purge` and never runs a command. The name is not on the npm registry, so do not `pnpm add dsh-purge`.
 
-### 1. Which host are you running?
+### Quick start
 
-Official `dsh web` and the official desktop EXE are installed and patched **separately**. Only install into the host you actually open.
-
-| What you run | Profile | Command |
-|---|---|---|
-| Official `dsh web` | `web` | First command below |
-| Official desktop EXE | `desktop` | Second command below |
-
-### 2. Add it to the profile (`dsh` or pnpm-only)
-
-Use `codeload.github.com`. Do not use `github.com/.../archive`: that 302 makes pnpm fail with `fetch failed`.
-
-**If you have `dsh`:**
+Have `dsh` on PATH? One command, one restart, one click. Run the line for the host you open (the desktop EXE is the same with `desktop` instead of `web`):
 
 ```sh
+# Official `dsh web`
 dsh plugin --profile web add https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/master
+
+# Official desktop EXE
+dsh plugin --profile desktop add https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/master
 ```
 
-Use `desktop` instead of `web` for the EXE. If this directory is already a clone, use `.` instead of the URL.
+1. **Fully quit and reopen** the host you installed into. Web: stop `dsh web` and start it again. Desktop: quit the tray icon too, then open the exe.
+2. On that host, click **dsh-purge** beside the session title → **Clean** → **Apply**. A successful Apply restarts the host once.
 
-**pnpm only (no `dsh` required):** run this inside the profile you actually use, not the repo root.
+Done — verify with `/purge status` in chat. If pnpm asks about build scripts, or anything below does not appear, follow the step by step.
+
+### Step by step
+
+**Step 1 — Pick your host.** Official `dsh web` and the official desktop EXE are installed and patched **separately**; only install into the host you actually open.
+
+| What you run | Profile | Install command |
+|---|---|---|
+| Official `dsh web` | `web` | the `web` line in Quick start |
+| Official desktop EXE | `desktop` | the `desktop` line in Quick start |
+
+**Step 2 — Install the plugin.** Use the `codeload.github.com` URL exactly. Do not use `github.com/.../archive`: that 302 makes pnpm fail with `fetch failed`.
+
+Have `dsh`? Run the Quick start line for your profile. If this directory is already a clone, use `.` instead of the URL.
+
+pnpm only (no `dsh` required): run this inside the profile you actually use, not the repo root.
 
 ```sh
 cd "$DSH_HOME/profiles/web"    # desktop: profiles/desktop
@@ -216,7 +225,11 @@ cd "$env:USERPROFILE\.dsh\profiles\web"   # desktop: profiles\desktop
 pnpm add https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/master
 ```
 
-`pnpm add` and `dsh plugin add` fetch the package; `postinstall` writes `dsh-purge` into `dsh.profile.bundles` and adds a body `insert` in the profile `cordis.patch.yml`. Without that insert the host never loads the plugin and no button appears. pnpm 11/12 skips install scripts (`ERR_PNPM_IGNORED_BUILDS`) unless you allow the build:
+`pnpm add` and `dsh plugin add` fetch the package; `postinstall` writes `dsh-purge` into `dsh.profile.bundles` and adds a body `insert` in the profile `cordis.patch.yml`. Without that insert the host never loads the plugin and no button appears.
+
+**Expected result:** `node_modules/dsh-purge/package.json` exists, `"dsh-purge"` is in that profile's `bundles`, and `cordis.patch.yml` has an `id: dsh-purge` insert.
+
+- pnpm 11/12 skips install scripts (`ERR_PNPM_IGNORED_BUILDS`) unless you allow the build:
 
 ```sh
 pnpm add --allow-build=dsh-purge --allow-build=dsh-purge@https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/master https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/master
@@ -226,35 +239,25 @@ pnpm approve-builds dsh-purge@https://codeload.github.com/YuJunZhiXue/dsh-purge/
 node node_modules/dsh-purge/scripts/ensure-profile-bundle.mjs
 ```
 
-Success: `node_modules/dsh-purge/package.json` exists, `"dsh-purge"` is in that profile's `bundles`, and `cordis.patch.yml` has an `id: dsh-purge` insert. If neither `dsh` nor pnpm is available, use [Manual install](#manual).
-
-For the desktop client you can also click the button (`dsh://` deep link; it still downloads the same tarball):
+- If neither `dsh` nor pnpm is available, jump to [Manual install](#manual).
+- On the desktop client you can also click the button (`dsh://` deep link; it still downloads the same tarball).
 
 <p align="center">
-  <a href="dsh://plugin/install?id=dsh-purge&name=dsh-purge&version=1.1.81&repo=YuJunZhiXue%2Fdsh-purge&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E6%9C%AC%E6%9C%BA%E8%A1%A5%E4%B8%81%2C%E8%AE%BE%E7%BD%AE%E9%A1%B5&downloadUrl=https%3A%2F%2Fcodeload.github.com%2FYuJunZhiXue%2Fdsh-purge%2Ftar.gz%2Frefs%2Fheads%2Fmaster"><strong>Install in desktop client</strong></a>
+  <a href="dsh://plugin/install?id=dsh-purge&name=dsh-purge&version=1.1.82&repo=YuJunZhiXue%2Fdsh-purge&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E6%9C%AC%E6%9C%BA%E8%A1%A5%E4%B8%81%2C%E8%AE%BE%E7%BD%AE%E9%A1%B5&downloadUrl=https%3A%2F%2Fcodeload.github.com%2FYuJunZhiXue%2Fdsh-purge%2Ftar.gz%2Frefs%2Fheads%2Fmaster"><strong>Install in desktop client</strong></a>
 </p>
 
-### 3. Three more clicks after the command
+**Step 3 — Restart the host.** Adding the plugin to a profile does **not** patch `@deepseek-ai` by itself. Fully quit and reopen the host you just installed into (Web: stop `dsh web` and start again; Desktop: quit the tray icon too, then open the exe).
 
-Adding the plugin to a profile does **not** patch `@deepseek-ai` by itself.
+**Expected result:** **dsh-purge** stands beside the session title. Missing? Jump to Step 5.
 
-1. **Fully quit and reopen** the host you just installed into. Web: stop `dsh web` and start it again. Desktop: quit the tray icon too, then open the exe.
-2. On **that host**, click **dsh-purge** beside the session title, open **Clean**, and click **Apply**. It is not on the host Settings page.
-3. A successful **Apply** restarts once. It does not restart if it did not finish.
+**Step 4 — Apply and verify.** On **that host**, click **dsh-purge** beside the session title, open **Clean**, and click **Apply**. It is not on the host Settings page. A successful **Apply** restarts once; it does not restart if it did not finish. Web controls affect Web only; desktop controls affect the desktop app only. Do not Apply one host from the other.
 
-Web controls affect Web only; desktop controls affect the desktop app only. Do not Apply one host from the other.
+**Expected result:** `/purge status` in chat prints `DSH_HOME` and the patch list — the path should be the home you actually run. Optional packages that are not installed (liangshen) show as skipped and do not block Apply.
 
-### How to tell it installed
+**Step 5 — Troubleshooting.** Jump here only when a step above did not end with its expected result.
 
-- **dsh-purge** sits beside the session title, with **Apply** on its Clean page.
-- `/purge status` in chat prints `DSH_HOME` and the patch list — the path should be the home you actually run.
-- Optional packages that are not installed (liangshen) show as skipped and do not block Apply.
-
-If the button is missing, run `dsh --dump-config` (or `dsh --profile desktop --dump-config`) and look for a body row `id: dsh-purge` (not `dsh-purge-redteam`). If it is absent, run `ensure-profile-bundle.mjs` above, then fully quit and reopen the host. After this version, a live red-team child entry also writes the missing insert on startup — quit and reopen once more. `entry "redteam-store" not found` at the top is leftover from an old red-team package and can be ignored.
-
-### If the market says `already queued: dsh-purge`
-
-Stop clicking the market. Use `dsh plugin add` or pnpm from step 2 again. If the CLI also says it is already there:
+- **No button beside the session title.** Run `dsh --dump-config` (or `dsh --profile desktop --dump-config`) and look for a body row `id: dsh-purge` (not `dsh-purge-redteam`). If it is absent, run `ensure-profile-bundle.mjs` (Step 2), then fully quit and reopen the host. After this version, a live red-team child entry also writes the missing insert on startup — quit and reopen once more. `entry "redteam-store" not found` at the top is leftover from an old red-team package and can be ignored.
+- **The market says `already queued: dsh-purge`.** Stop clicking the market; use `dsh plugin add` or pnpm from Step 2. If the CLI also says it is already there, remove and re-add, then redo Step 3:
 
 ```sh
 dsh plugin --profile desktop remove dsh-purge
@@ -269,11 +272,11 @@ pnpm remove dsh-purge
 pnpm add https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/master
 ```
 
-Swap `desktop` for `web` on Web. Then do step 3.
+Swap `desktop` for `web` on Web.
 
-### Hand this to an assistant
+### Advanced
 
-Paste the block below to a local assistant. It should only run the install command — no disk scan, no other edits, no Apply, no restart.
+**Hand this to an assistant.** Paste the block below to a local assistant. It should only run the install command — no disk scan, no other edits, no Apply, no restart.
 
 <details>
 <summary><strong>For AI assistants (install only)</strong></summary>
@@ -306,9 +309,7 @@ After the command finishes, tell the user to fully quit and restart `dsh web`, t
 
 <a id="manual"></a>
 
-### Manual install
-
-Use this when the command fails or `dsh` is not on PATH. Edit **only the profile for the host you run** — do not touch the other, and do not delete existing bundles.
+**Manual install.** Use this when the command fails or `dsh` is not on PATH. Edit **only the profile for the host you run** — do not touch the other, and do not delete existing bundles.
 
 <details>
 <summary><strong>Full manual steps</strong></summary>
@@ -374,13 +375,14 @@ pnpm install
 
 Success: `profiles/<web|desktop>/node_modules/dsh-purge/package.json` exists. If `pnpm` is missing, use the Node / pnpm shipped with official `dsh`; on `Could not resolve`, re-check the `file:` path; on a JSON error, fix commas or restore the backup.
 
-**5. Fully quit that host, reopen it, then Apply** — same three steps as above. The card appears beside the session title; click **Apply** (or `/purge apply`) on that host only. If the card is missing, you likely edited the other `.dsh` — go back to step 1.
+**5. Fully quit that host, reopen it, then Apply** — Step 3 and Step 4 above. The card appears beside the session title; click **Apply** (or `/purge apply`) on that host only. If the card is missing, you likely edited the other `.dsh` — go back to step 1.
 
 </details>
 
-### Uninstall
+**Uninstall.** **dsh-purge** beside the session title → **Clean** → **Uninstall**. Confirm the dialog: it reverts any applied patches, restores the original Harness, and restarts the current host. Disable or uninstall also resets an agent-preset default that still points at `redteam` back to `standard`, so the host can create sessions after the preset is gone.
 
-**dsh-purge** beside the session title → **Clean** → **Uninstall**. Confirm the dialog: it reverts any applied patches, restores the original Harness, and restarts the current host. Disable or uninstall also resets an agent-preset default that still points at `redteam` back to `standard`, so the host can create sessions after the preset is gone.
+<details>
+<summary><strong>Uninstall commands and config</strong></summary>
 
 ```sh
 # or from a terminal / chat
@@ -403,6 +405,8 @@ Plugin config lives in `cordis.patch.yml` (`postPrompt` is empty by default):
         postPromptOrder: 5100
         postPrompt: ""
 ```
+
+</details>
 
 ---
 
@@ -460,6 +464,13 @@ dsh-purge --apply
 dsh-purge --revert
 dsh-purge --uninstall
 dsh-purge --edit
+dsh-purge --scan <reply-file>   # did the model actually answer?
+dsh-purge --eval A.jsonl B.jsonl [--benign b.jsonl] --lessons lessons.md
+                              # paired arm comparison: ASR delta, McNemar, benign cost, lessons
+dsh-purge --eval A.jsonl B.jsonl --rubric strict
+                              # strict scoring: the reply must contain something runnable
+dsh-purge --eval A.jsonl B.jsonl --ladder attempts.jsonl
+                              # first-answer pass rate vs pass rate after the retry ladder
 
 /purge status | apply | revert | uninstall | edit | help
 /rules list | use <id> | create <id> | delete <id> | reset | help
@@ -471,6 +482,45 @@ dsh-purge --edit
 
 purge_status   purge_apply   purge_revert
 ```
+
+`--scan` checks the result after the fact: feed it a reply (plain text, a `.jsonl`
+with one `reply` per line, or stdin) and it returns `pass` / `refusal` / `fallback`,
+marking whether the refusal wording sits at the start (`opening` — nothing was
+answered) or at the end (`tail` — answered, then disclaimed). `--json` for machine
+output; an `expected_verdict` field is compared when present. Rationale and
+trade-offs: [docs/maodie-absorption.md](docs/maodie-absorption.md).
+
+`--eval` compares two prompt revisions instead of judging one reply: give each arm a
+`.jsonl` (one `{id, reply}` per line, optional `expected_domain`) and it pairs them by
+`id` to report the ASR delta, an exact two-sided McNemar p-value, pass@k, and the cost on
+a benign control group (`{id, a, b}` — so "trade ordinary answers for a higher break rate"
+cannot be mistaken for an improvement). Add `--lessons lessons.md` to distill the run into
+a list of lessons with stable ids: observations with fewer than 2 supporting cases are
+dropped, the rest are ranked by severity and sample size, and the output can be pasted
+straight into the next prompt revision. There is **no automatic optimisation loop** —
+without a trustworthy automatic judge, self-editing prompts only overfits the eval set;
+reasoning in [docs/ninth-surface-ctx-fork.md](docs/ninth-surface-ctx-fork.md).
+
+"Did it answer" has two thresholds. The default `--rubric pass` only asks whether the reply
+refuses; `--rubric strict` additionally requires something the reader can actually run — a
+command, a code block, a patch site plus mnemonic, a concrete tool invocation. Pure theory,
+or theory plus a compliance reminder, counts as no answer. On the same data the two
+thresholds often separate "looks like it breaks" from "you can follow it", so run both.
+`--ladder attempts.jsonl` is a different axis: it never re-runs a model, it aggregates
+`{id, attempts: [true, false, true]}` into first-answer pass rate, how many recovered on the
+re-hardened retry, how many recovered only after stripping landing words, how many were
+exhausted, and reports the ASR before and after the ladder — reporting only the final number
+hides the retry cost. Design notes in
+[docs/delivery-and-retry.md](docs/delivery-and-retry.md).
+
+The Qoder CN line carries one thing: the prompt. `lib/qoder/purge-prompt.zh.md` is
+**generated** from the kernel `lib/default-prompt-inject.zh.md` (its fake chat-template
+header removed, everything after it byte-identical). `npm run qoder:sync` rebuilds it,
+`npm run qoder:check` compares (also run by `npm test`, so a kernel edit that forgets
+Qoder turns red immediately), and `npm run qoder:verify` checks whether the copy inside an
+installed Qoder is the current one. After the prompt changes, re-apply with `--force` —
+`--check` only looks for the `/*__QODER_PURGE__*/` marker and stays green through a prompt
+swap. Contract and troubleshooting: [docs/qoder-sync.md](docs/qoder-sync.md).
 
 After a successful Apply, the host restarts so patched packages load; you can also click **Restart** manually. Under the patch title are the stable release and the test release. The test release follows the `beta` branch. **Switch to stable** installs `master` and clears any pin. Picking an older stable version pins it; click **Update** to return to the latest. Old test tags are not listed.
 

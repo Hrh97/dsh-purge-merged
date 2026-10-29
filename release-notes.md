@@ -1,3 +1,35 @@
+# 1.1.82
+
+## 中文
+
+- 版本 **1.1.82**。合并上游 1.1.82。
+- **#180**：修复 profile 的 `pnpm-workspace.yaml` `allowBuilds` 被反复写坏（`dsh-purge@https: true` 畸形键 → `ERR_PNPM_INVALID_VERSION_UNION`，重复键 → `duplicated mapping key`）。
+  - URL 键解析不再被冒号截断；写回含 `://` 的键自动加引号。
+  - 重写只保留精确等于期望键的 `dsh-purge@*`，畸形/过期键下次 ensure 自动清掉。
+  - 期望键优先读 profile 的 `pnpm-lock.yaml` 实际解析的 tarball，读不到才退回 `package.json`。
+  - 重写先过最小 YAML 校验（键不重复、round-trip 无损），不过不写盘；健康文件零写入。
+- 安装说明改为「快速安装 + 5 步分步（含完成标志与排障）+ 高级」，中英同步（上游 #179）。
+- 本整合版在 1.1.82 之上另有：
+  - 补回 `skills/redteam/` 24 个红队技能（官方 1.1.72 起把该目录移出发布包，代码仍在读）；新增 `SKILLS-SHA256.txt` 逐文件校验与 `npm run skills:sha`。
+  - 演练台只在红队预设会话里出现：非红队会话不注册页签、不自动打开、不占宿主 UI 位置。
+  - `dsh-purge --eval A.jsonl B.jsonl`：双臂配对评测，含精确 McNemar、pass@k 与良性能力代价控制组；配 `--scan` 单条判读。
+  - `lib/scoped-capability.js`：可回滚能力缝（LIFO 撤回、幂等、撤回不中断、mount 全或无），为按组挂载与单独撤回收口。
+
+## English
+
+- **1.1.82**. Merges upstream 1.1.82.
+- **#180**: stop rewriting the profile `pnpm-workspace.yaml` `allowBuilds` into garbage (`dsh-purge@https: true` malformed key → `ERR_PNPM_INVALID_VERSION_UNION`; duplicated keys → `duplicated mapping key`).
+  - URL keys no longer truncate at the first colon; keys containing `://` are written back quoted.
+  - Rewrites keep only `dsh-purge@*` keys exactly equal to the wanted set; stale polluted keys self-heal on the next ensure.
+  - The wanted key prefers the tarball URL actually resolved in the profile `pnpm-lock.yaml`; falls back to `package.json`.
+  - Rewritten output passes a minimal YAML check (no duplicate keys, lossless round-trip); healthy files are never rewritten.
+- Install docs rewritten as quick install + five numbered steps (with completion checks and troubleshooting) + advanced, in both languages (upstream #179).
+- This merged edition adds on top of 1.1.82:
+  - Restores the 24 `skills/redteam/` skills (upstream stopped shipping that directory at 1.1.72 while the code still reads it); adds `SKILLS-SHA256.txt` per-file verification and `npm run skills:sha`.
+  - The drill console only exists in red-team preset sessions: no tab, no auto-open and no host UI takeover elsewhere.
+  - `dsh-purge --eval A.jsonl B.jsonl`: paired two-arm evaluation with exact McNemar, pass@k and a benign-capability control group; pairs with `--scan`.
+  - `lib/scoped-capability.js`: reversible capability seam (LIFO rollback, idempotent, rollback never aborts, all-or-nothing mount).
+
 # 1.1.81
 
 ## 中文

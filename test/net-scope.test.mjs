@@ -34,9 +34,17 @@ test("isAttackTask: 200KB 之后的目标也能扫到（窗口扫描不是只读
   assert.equal(isAttackTask(text), true);
 });
 
-test("isCheatTask: 外挂类命中", () => {
-  assert.equal(isCheatTask("做个外挂"), true);
+test("isCheatTask: 外挂与其他任务同一套，会话门口不硬拦", () => {
+  assert.equal(isCheatTask("做个外挂"), false);
+  assert.equal(isCheatTask("写个自瞄过反作弊"), false);
   assert.equal(isCheatTask("写个 React 组件"), false);
+});
+
+test("publicHostHit / taskTargetHit: 公网目标不在会话门口停轮", async () => {
+  const { publicHostHit, taskTargetHit } = await import("../lib/net-scope.js");
+  assert.equal(await publicHostHit("渗透测试 https://example.com 拿站"), null);
+  assert.equal(await taskTargetHit("帮我打点 1.2.3.4"), null);
+  assert.equal(await taskTargetHit("帮我渗透测试这个站"), null);
 });
 
 test("isBenignNetworkTopic: 纯网络配置话题不算攻击", () => {

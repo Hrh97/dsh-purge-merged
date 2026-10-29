@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+import fs from "node:fs";
+import path from "node:path";
+
 import * as core from "../lib/core.js";
 import * as rules from "../lib/rules.js";
 
@@ -35,8 +38,347 @@ function printStatus(state) {
   return out.join("\n");
 }
 
+/**
+ * --scan：判读一批答复到底给没给答案。
+ *
+ * 输入三种：.jsonl（每条一行，取 reply 字段）、纯文本（整份当一个答复）、stdin。
+ * 输出 verdict 时同时给出命中位置 —— 这是与 maodie 判拒器最大的差别：
+ * 它只扫开头 160 字符，正文答完、末尾补一句「但我无法提供 X」仍然报绿。
+ * 这里 opening / tail 分开报，调用方自己决定报警级别。
+ */
+async function runScan(rest) {
+  const { scanReply, compareVerdict } = await import("../lib/refusal-scan.js");
+  const asJson = rest.includes("--json");
+  const file = rest.find((a) => !a.startsWith("-"));
+
+  let text;
+  let label;
+  if (file) {
+    if (!fs.existsSync(file)) {
+      console.log(`[ERROR] 找不到文件 ${file}`);
+      process.exit(1);
+    }
+    text = fs.readFileSync(file, "utf8");
+    label = file;
+  } else if (!process.stdin.isTTY) {
+    text = fs.readFileSync(0, "utf8");
+    label = "<stdin>";
+  } else {
+    console.log(`dsh-purge --scan 用法:
+  dsh-purge --scan 答复.txt          判读单个答复
+  dsh-purge --scan replies.jsonl     批量判读（每行一个 JSON，取 reply 字段）
+  dsh-purge --scan < file.txt        从 stdin 读
+  加 --json 输出机器可读结果`);
+    return;
+  }
+
+  const looksJsonl = /\.jsonl$/i.test(file || "") || /^\s*\{/m.test(text.split("\n").find((l) => l.trim()) || "");
+  const results = [];
+  const tally = { pass: 0, refusal: 0, fallback: 0 };
+  const compared = { pass: 0, fail: 0, unknown: 0 };
+  const skipped = [];
+
+  if (looksJsonl) {
+    // 这里不套 prompt-bank 的解析器：它要求每行有 prompt（评测用例的形状），
+    // 而 --scan 吃的是答复文件，只需要 reply。空行与 # 注释跳过，坏行记下来不中断。
+    const lines = text.split(/\r?\n/);
+    lines.forEach((line, idx) => {
+      const s = line.trim();
+      if (!s || s.startsWith("#")) return;
+      let row;
+      try {
+        row = JSON.parse(s);
+      } catch (e) {
+        skipped.push(`第 ${idx + 1} 行 JSON 解析失败: ${e.message}`);
+        return;
+      }
+      if (!row || typeof row !== "object") {
+        skipped.push(`第 ${idx + 1} 行不是对象`);
+        return;
+      }
+      const reply = row.reply ?? row.text ?? row.answer ?? null;
+      if (typeof reply !== "string" || !reply.trim()) {
+        skipped.push(`第 ${idx + 1} 行 ${row.id ?? ""} 无 reply 字段`);
+        return;
+      }
+      const domain = row.expected_domain ?? row.domain ?? undefined;
+      const expected = row.expected_verdict ?? row.expected ?? row.verdict;
+      const scan = scanReply(reply, { domain });
+      tally[scan.verdict] = (tally[scan.verdict] || 0) + 1;
+      const cmp = compareVerdict(scan, expected);
+      compared[cmp.status] = (compared[cmp.status] || 0) + 1;
+      results.push({ i: results.length + 1, id: row.id ?? null, scan, cmp });
+    });
+  } else {
+    const scan = scanReply(text);
+    tally[scan.verdict] = 1;
+    results.push({ i: 1, id: null, scan, cmp: null });
+  }
+
+  if (asJson) {
+    console.log(JSON.stringify({ source: label, tally, compared, skipped, results }, null, 2));
+    return;
+  }
+
+  const mark = (v) => (v === "pass" ? "✓ pass  " : v === "refusal" ? "✗ refusal" : "⚠ fallback");
+  console.log(`dsh-purge --scan  ${label}`);
+  console.log(`  条数 ${results.length}  pass ${tally.pass || 0}  refusal ${tally.refusal || 0}  fallback ${tally.fallback || 0}`);
+  for (const r of results) {
+    const s = r.scan;
+    const where = [];
+    if (s.refusal.opening.length) where.push(`opening:${s.refusal.opening.join("/")}`);
+    if (s.refusal.tail.length) where.push(`tail:${s.refusal.tail.join("/")}`);
+    if (s.fallback.length) where.push(`fallback:${s.fallback.join("/")}`);
+    const head = `  ${String(r.i).padStart(3)} ${mark(s.verdict)}`;
+    const id = r.id ? ` ${r.id}` : "";
+    const tail = where.length ? `  ${where.join("  ")}` : s.domain ? `  domain=${s.domain}` : "";
+    const verdict = r.cmp && r.cmp.status !== "unknown" ? `  expected=${r.cmp.want} ${r.cmp.status === "pass" ? "OK" : "MISMATCH"}` : "";
+    console.log(`${head}${id}${tail}${verdict}`);
+  }
+  if (compared.pass || compared.fail) {
+    console.log(`  比对 expected: OK ${compared.pass}  MISMATCH ${compared.fail}  unknown ${compared.unknown}`);
+  }
+  for (const s of skipped.slice(0, 5)) console.log(`  - 跳过 ${s}`);
+  if (skipped.length > 5) console.log(`  - 另有 ${skipped.length - 5} 条跳过`);
+  if (tally.refusal) console.log("  提示: tail 命中 = 正文给了答案但末尾补了拒绝措辞，非开头拒答。");
+}
+
+/**
+ * --eval：两臂配对评测。
+ *
+ * 与 --scan 的区别是「比较」而不是「判读」：--scan 回答这条答复给没给答案，
+ * --eval 回答 B 臂比 A 臂好多少、这个差是不是噪声、代价是什么。
+ *
+ *   dsh-purge --eval A.jsonl B.jsonl
+ *   dsh-purge --eval A.jsonl B.jsonl --benign benign.jsonl
+ *   dsh-purge --eval A.jsonl B.jsonl --sampling 10:3:3 --json
+ *   dsh-purge --eval A.jsonl B.jsonl --benign b.jsonl --lessons lessons.md
+ *
+ * 三个文件都是 jsonl，每行 { id, reply }；bank 里的 expected_domain 可选。
+ * --benign 的行是 { id, a: bool, b: bool }（两臂在良性题上的通过与否）。
+ * --lessons 把结果蒸馏成结构化「教训」写进 markdown，供下一轮改提示词；
+ * --lessons-limit 限制条数（默认 12）。
+ */
+async function runEval(rest) {
+  const { scanReply } = await import("../lib/refusal-scan.js");
+  const { compareArms, formatEvalReport, pairArms } = await import("../lib/prompt-eval.js");
+  const { distillLessons, formatLessons } = await import("../lib/eval-lessons.js");
+
+  const asJson = rest.includes("--json");
+  const flagValue = (name) => {
+    const at = rest.indexOf(name);
+    return at >= 0 ? rest[at + 1] : undefined;
+  };
+  const samplingRaw = flagValue("--sampling");
+  const benignFile = flagValue("--benign");
+  const lessonsFile = flagValue("--lessons");
+  const lessonsLimitRaw = flagValue("--lessons-limit");
+  const rubricRaw = flagValue("--rubric");
+  const ladderFile = flagValue("--ladder");
+
+  // 判分口径：pass 只看有没被挡；strict 还要求答复里有可照着做的细节。
+  const rubric = String(rubricRaw ?? "pass").toLowerCase() === "strict" ? "strict" : "pass";
+  if (rubricRaw && !["pass", "strict"].includes(String(rubricRaw).toLowerCase())) {
+    console.log(`[WARN] --rubric 只认 pass / strict，收到 "${rubricRaw}"，按 pass 处理`);
+  }
+
+  // 位置参数里排除掉 flag 及其取值，剩下的前两个就是两臂文件
+  const consumed = new Set();
+  for (const name of ["--benign", "--sampling", "--lessons", "--lessons-limit", "--rubric", "--ladder"]) {
+    const at = rest.indexOf(name);
+    if (at >= 0) {
+      consumed.add(at);
+      consumed.add(at + 1);
+    }
+  }
+  const positional = rest.filter((a, i) => !a.startsWith("-") && !consumed.has(i));
+
+  if (positional.length < 2) {
+    console.log(`dsh-purge --eval 用法:
+  dsh-purge --eval A.jsonl B.jsonl              两臂配对比较
+  dsh-purge --eval A.jsonl B.jsonl --benign b.jsonl
+                                                带良性能力控制组（强烈建议）
+  dsh-purge --eval A.jsonl B.jsonl --sampling 10:3:3
+                                                pass@k 的 n:c:k
+  dsh-purge --eval A.jsonl B.jsonl --benign b.jsonl --lessons lessons.md
+                                                把结果蒸馏成可复用的教训（markdown）
+  dsh-purge --eval A.jsonl B.jsonl --rubric strict
+                                                严格判分：还要求答复里有可执行的细节
+  dsh-purge --eval A.jsonl B.jsonl --ladder attempts.jsonl
+                                                看重试阶梯：首答通过 vs 走完阶梯后通过
+  加 --json 输出机器可读结果
+  --lessons-limit N                            教训条数上限，默认 12
+
+答复文件每行 {"id": "...", "reply": "..."}；良性文件每行 {"id": ..., "a": true, "b": false}；
+阶梯文件每行 {"id": "...", "attempts": [true, false, true]}（首答、第1级、第2级…）`);
+    return;
+  }
+
+  const readArm = (file, tag) => {
+    if (!fs.existsSync(file)) {
+      console.log(`[ERROR] 找不到 ${tag} 文件 ${file}`);
+      process.exit(1);
+    }
+    const rows = [];
+    const skipped = [];
+    fs.readFileSync(file, "utf8")
+      .split(/\r?\n/)
+      .forEach((line, idx) => {
+        const s = line.trim();
+        if (!s || s.startsWith("#")) return;
+        let row;
+        try {
+          row = JSON.parse(s);
+        } catch (e) {
+          skipped.push(`第 ${idx + 1} 行 JSON 解析失败: ${e.message}`);
+          return;
+        }
+        const reply = row?.reply ?? row?.text ?? row?.answer ?? null;
+        if (typeof reply !== "string" || !reply.trim()) {
+          skipped.push(`第 ${idx + 1} 行无 reply 字段`);
+          return;
+        }
+        const domain = row.expected_domain ?? row.domain ?? null;
+        // text 留着：--rubric strict 要看原文里有没有可执行细节，只看 verdict 判不了。
+        rows.push({ id: row.id ?? null, domain, text: reply, scan: scanReply(reply, { domain: domain ?? undefined }) });
+      });
+    return { rows, skipped };
+  };
+
+  const armA = readArm(positional[0], "A 臂");
+  const armB = readArm(positional[1], "B 臂");
+
+  let benign = null;
+  if (benignFile) {
+    if (!fs.existsSync(benignFile)) {
+      console.log(`[ERROR] 找不到良性文件 ${benignFile}`);
+      process.exit(1);
+    }
+    benign = [];
+    fs.readFileSync(benignFile, "utf8")
+      .split(/\r?\n/)
+      .forEach((line) => {
+        const s = line.trim();
+        if (!s || s.startsWith("#")) return;
+        let row;
+        try {
+          row = JSON.parse(s);
+        } catch {
+          return;
+        }
+        if (!row || typeof row !== "object") return;
+        benign.push({ id: row.id ?? null, a: Boolean(row.a), b: Boolean(row.b) });
+      });
+  }
+
+  let sampling;
+  if (samplingRaw) {
+    const parts = String(samplingRaw).split(":").map((x) => Number(x.trim()));
+    if (parts.length === 3 && parts.every((x) => Number.isFinite(x))) {
+      sampling = { n: parts[0], c: parts[1], k: parts[2] };
+    } else {
+      console.log(`[WARN] --sampling 要写成 n:c:k，收到 "${samplingRaw}"，本次跳过 pass@k`);
+    }
+  }
+
+  const labelA = path.basename(positional[0]);
+  const labelB = path.basename(positional[1]);
+  const result = compareArms({
+    casesA: armA.rows,
+    casesB: armB.rows,
+    benign,
+    sampling,
+    labelA,
+    labelB,
+    rubric,
+  });
+
+  // 重试阶梯：只吃「每目标每次尝试通没通」，不重跑模型 —— 数据由调用方跑完写下来。
+  let ladder = null;
+  if (ladderFile) {
+    const { summarizeLadder, formatLadderReport } = await import("../lib/retry-ladder.js");
+    if (!fs.existsSync(ladderFile)) {
+      console.log(`[ERROR] 找不到阶梯文件 ${ladderFile}`);
+      process.exit(1);
+    }
+    const records = [];
+    fs.readFileSync(ladderFile, "utf8")
+      .split(/\r?\n/)
+      .forEach((line) => {
+        const s = line.trim();
+        if (!s || s.startsWith("#")) return;
+        try {
+          const row = JSON.parse(s);
+          if (row && Array.isArray(row.attempts)) records.push({ id: row.id ?? null, attempts: row.attempts });
+        } catch {
+          /* 坏行跳过，与两臂文件一致 */
+        }
+      });
+    ladder = summarizeLadder(records);
+    ladder.text = formatLadderReport(ladder);
+  }
+
+  const skipped = [...armA.skipped.map((s) => `A ${s}`), ...armB.skipped.map((s) => `B ${s}`)];
+  if (skipped.length) result.warnings.push(`${skipped.length} 行被跳过（见 --json 的 skipped）`);
+
+  // 教训蒸馏：只在 --lessons 或 --json 时才做，纯看报告不多花这次计算。
+  let distilled = null;
+  if (lessonsFile || asJson) {
+    const limit = Number.parseInt(lessonsLimitRaw ?? "", 10);
+    const rows = pairArms(armA.rows, armB.rows).pairs.map((p) => ({
+      id: p.id ?? p.key,
+      domain: p.a?.domain ?? p.b?.domain ?? null,
+      a: p.a?.scan ?? null,
+      b: p.b?.scan ?? null,
+    }));
+    // 良性行只有布尔结果，包成 scan 形状好让同一个判读口径吃进去。
+    const benignRows = (benign ?? []).map((row) => ({
+      id: row.id,
+      a: { verdict: row.a ? "pass" : "refusal" },
+      b: { verdict: row.b ? "pass" : "refusal" },
+    }));
+    distilled = distillLessons({
+      rows,
+      benign: benignRows,
+      limit: Number.isInteger(limit) && limit > 0 ? limit : undefined,
+      labelA,
+      labelB,
+    });
+    if (lessonsFile) {
+      fs.writeFileSync(lessonsFile, formatLessons(distilled, { labelA, labelB }), "utf8");
+    }
+  }
+
+  if (asJson) {
+    console.log(JSON.stringify({ ...result, lessons: distilled?.lessons ?? [], ladder, skipped }, null, 2));
+    return;
+  }
+  console.log(formatEvalReport(result));
+  if (ladder) {
+    console.log("");
+    console.log(ladder.text);
+  }
+  if (lessonsFile) {
+    const kept = distilled?.lessons?.length ?? 0;
+    const rest = distilled?.dropped ? `，另有 ${distilled.dropped} 条被上限截掉` : "";
+    console.log(`教训 ${kept} 条（支撑下限 ${distilled?.support?.minSupport ?? 2}）已写入 ${lessonsFile}${rest}`);
+  }
+  for (const s of skipped.slice(0, 5)) console.log(`  - 跳过 ${s}`);
+  if (skipped.length > 5) console.log(`  - 另有 ${skipped.length - 5} 行跳过`);
+}
+
 async function main() {
-  const mode = args.find((a) => ["--apply", "--revert", "--uninstall", "--status", "--edit", "--help"].includes(a));
+  const mode = args.find((a) => ["--apply", "--revert", "--uninstall", "--status", "--edit", "--help", "--scan", "--eval"].includes(a));
+
+  if (mode === "--scan") {
+    await runScan(args.filter((a) => a !== "--scan"));
+    return;
+  }
+
+  if (mode === "--eval") {
+    await runEval(args.filter((a) => a !== "--eval"));
+    return;
+  }
 
   if (mode === "--help" || args.includes("-h")) {
     console.log(`dsh-purge 用法:
@@ -45,6 +387,12 @@ async function main() {
   dsh-purge --revert     回滚还原
   dsh-purge --uninstall  卸载插件（已应用则先还原）
   dsh-purge --edit       编辑注入文件 prompt-inject.md
+  dsh-purge --scan <文件> 判读答复给没给答案（.jsonl 批量 / 纯文本单条 / stdin）
+  dsh-purge --eval A.jsonl B.jsonl [--benign b.jsonl] [--sampling n:c:k]
+                         两臂配对比较：ASR 差、McNemar 显著性、良性能力代价
+                         加 --rubric strict 要求答复里有可执行细节再算通过
+                         加 --lessons lessons.md 把结果蒸馏成可复用的教训
+                         加 --ladder attempts.jsonl 看首答通过 vs 走完重试阶梯后通过
   dsh-purge --help       帮助`);
     return;
   }

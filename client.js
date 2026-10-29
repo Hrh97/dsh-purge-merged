@@ -7897,36 +7897,6 @@ body[data-ds-dark-theme] .rt-scope-testing,.dshp-dock[data-theme="dusk"] .rt-sco
           h('span', null, 'SQLite · ' + (snapshot && snapshot.engagement ? snapshot.engagement.name : ''))))
     }
 
-    /* ---------------------------------------------------------- 入口按钮 */
-    function SidebarButton(props) {
-      const st = useUI()
-      return h('button', {
-        className: 'rt-icon-btn' + (st.open ? ' on' : ''),
-        title: 'RedTeam 控制台（常驻右侧栏）',
-        onClick: () => setUI({ open: !st.open }),
-      }, h('span', { style: { fontSize: 14 } }, '⛨'), props.wide ? h('span', null, 'RedTeam') : null)
-    }
-
-    function HeaderButton() {
-      const st = useUI()
-      return h('button', {
-        className: 'rt-hbtn' + (st.open ? ' on' : ''),
-        title: 'RedTeam 控制台（常驻右侧栏）',
-        onClick: () => setUI({ open: !st.open }),
-      }, '⛨ RedTeam')
-    }
-
-    /** 侧栏「全面浏览」：在新浏览器窗口打开完整控制台（当前窗口不受影响）。 */
-    function FullButton(props) {
-      const open = () => {
-        try { window.open(window.location.href.split('#')[0] + '#redteam-full', '_blank', 'noopener') } catch { /* 被浏览器拦截 */ }
-      }
-      return h('button', {
-        className: 'rt-icon-btn',
-        title: '全面浏览：在新窗口打开完整控制台（当前窗口不受影响；新窗口内按 Esc 退出）',
-        onClick: open,
-      }, h('span', { style: { fontSize: 14 } }, '⛶'), props.wide ? h('span', null, '全面浏览') : null)
-    }
 
     /* ---------------------------------------------------------- 插件入口 */
     /** 唯一硬依赖：槽位注册表。 */
@@ -8602,8 +8572,16 @@ body[data-ds-dark-theme] .rt-scope-testing,.dshp-dock[data-theme="dusk"] .rt-sco
 			const st = useDock();
 			const [geom, setGeom] = useState(() => loadDockGeom());
 			const [dockTheme, setDockTheme] = useState(detectHostTheme);
+			/* 会话隔离（吸收自 ADWMC/helm-d）：红队面板只在「本插件预设」的会话里出现。
+			 * 非红队会话一律不渲染 RedTeam 页签，等价于在该会话里 return null ——
+			 * 不要把自己的入口塞进别人的会话。rtActive 跟着下面 1.5s 的 sync 一起刷新，
+			 * 切换预设/切会话时页签会自己长出来或消失，不需要重开面板。 */
+			const [rtActive, setRtActive] = useState(() => isRedteamModeActive());
 			useEffect(() => {
-				const sync = () => setDockTheme(detectHostTheme());
+				const sync = () => {
+					setDockTheme(detectHostTheme());
+					setRtActive(isRedteamModeActive());
+				};
 				sync();
 				const obs = new MutationObserver(sync);
 				if (document.body) obs.observe(document.body, { attributes: true, attributeFilter: ["data-ds-dark-theme", "class", "style"] });
@@ -8641,12 +8619,16 @@ body[data-ds-dark-theme] .rt-scope-testing,.dshp-dock[data-theme="dusk"] .rt-sco
 				return () => window.removeEventListener("resize", onResize);
 			}, []);
 			useEffect(() => {
-				if (st.tab === "drill" && readDrillAuth() && __dshPurgeDrill && __dshPurgeDrill.setUI) {
+				if (st.tab === "drill" && rtActive && readDrillAuth() && __dshPurgeDrill && __dshPurgeDrill.setUI) {
 					try { __dshPurgeDrill.setUI({ open: true }); } catch { /* ignore */ }
 				}
-			}, [st.tab, st.open]);
+			}, [st.tab, st.open, rtActive]);
 			const onTab = (id) => {
-				if (id === "drill") { requestDrill("tab"); return; }
+				if (id === "drill") {
+					if (!drillVisible) return;
+					requestDrill("tab");
+					return;
+				}
 				setDock({ tab: "clean", authOpen: false, pending: "tab" });
 			};
 			const startDrag = (e) => {
@@ -8727,7 +8709,10 @@ body[data-ds-dark-theme] .rt-scope-testing,.dshp-dock[data-theme="dusk"] .rt-sco
 				window.addEventListener("mousemove", move);
 				window.addEventListener("mouseup", up);
 			};
-			const body = st.tab === "clean"
+			/* 非红队会话里 st.tab 可能还残留着 "drill"（面板状态是全局存的），
+			 * 所以这里必须二次兜底：页签不渲染 + body 也回落，双保险。 */
+			const drillVisible = rtActive;
+			const body = st.tab === "clean" || !drillVisible
 				? h(SettingsRoot, { t })
 				: (readDrillAuth() && __dshPurgeDrill.Panel
 					? h(__dshPurgeDrill.Panel, { embedded: true })
@@ -8748,7 +8733,7 @@ body[data-ds-dark-theme] .rt-scope-testing,.dshp-dock[data-theme="dusk"] .rt-sco
 				h("div", { className: "dshp-dock-head", onMouseDown: startDrag, title: "Drag to move the panel" },
 					h("b", null, "dsh-purge"),
 					h("span", { style: { flex: 1 } }),
-					st.tab === "drill" && readDrillAuth()
+					st.tab === "drill" && drillVisible && readDrillAuth()
 						? h("button", { type: "button", onClick: () => requestDrill("full") }, t("dock.full"))
 						: null,
 					h("button", { type: "button", onClick: () => setDock({ open: false, authOpen: false, tab: "clean", pending: "tab" }) }, t("dock.close")),
@@ -8761,13 +8746,13 @@ body[data-ds-dark-theme] .rt-scope-testing,.dshp-dock[data-theme="dusk"] .rt-sco
 						"aria-selected": st.tab === "clean" ? "true" : "false",
 						onClick: () => onTab("clean"),
 					}, t("dock.clean")),
-					h("button", {
+					drillVisible ? h("button", {
 						type: "button",
 						className: "dshp-dock-tab" + (st.tab === "drill" ? " on" : ""),
 						role: "tab",
 						"aria-selected": st.tab === "drill" ? "true" : "false",
 						onClick: () => onTab("drill"),
-					}, t("dock.drill") + (readDrillAuth() ? "" : " · " + t("dock.unauthorized"))),
+					}, t("dock.drill") + (readDrillAuth() ? "" : " · " + t("dock.unauthorized"))) : null,
 				),
 				h("div", { className: "dshp-dock-body" }, body),
 				h("div", { className: "dshp-dock-resize-l", title: "Drag to resize width", onMouseDown: startResizeLeft }),
