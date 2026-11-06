@@ -298,9 +298,10 @@
       name: '@deepseek-ai/dsh-tool-subagent-control'
       disabled: false
 
-    - id: tool-subagent-list-agents
-      name: '@deepseek-ai/dsh-tool-subagent-control/list-agents'
-      disabled: false
+    # 0.2.2-rc.x 没有 `dsh-tool-subagent-control/list-agents` 这个导出子路径
+    # （0.2.2-rc.1 实测 exports 只有 "." / "./src/*" / "./package.json" / "./locale/*.json"）。
+    # 写在这里整份预设会标 broken（never started → 模式下拉被过滤）。
+    # list_agents 工具已由上面 tool-subagent-control 主入口自己注册，无需单独一行。
 
     - id: tool-subagent
       name: '@deepseek-ai/dsh-tool-subagent'
