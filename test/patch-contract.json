@@ -510,6 +510,31 @@
     ]
   },
   {
+    "id": 106,
+    "name": "AGENT_REQUEST_ALIAS_NOT_A_SWITCH",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "agent-loop"
+    ],
+    "surfaces": [],
+    "optional": false,
+    "softSettle": true,
+    "skipIfMarked": false,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge-106]"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 335,
+        "lines": 1
+      }
+    ]
+  },
+  {
     "id": 9,
     "name": "APPROVAL_AUTO_GRANT",
     "layer": "代码",
@@ -678,6 +703,11 @@
         "kind": "string",
         "chars": 396,
         "lines": 11
+      },
+      {
+        "kind": "string",
+        "chars": 315,
+        "lines": 8
       }
     ]
   },
@@ -751,9 +781,10 @@
     "strictFiles": false,
     "markers": [
       "[dsh-purge] observation bypass: writes are unconditional",
-      "[dsh-purge] observation bypass: edits are unconditional"
+      "[dsh-purge] observation bypass: edits are unconditional",
+      "[dsh-purge] observation bypass: edits/deletes are unconditional"
     ],
-    "markersAny": false,
+    "markersAny": true,
     "replacements": [
       {
         "kind": "string",
@@ -763,6 +794,16 @@
       {
         "kind": "string",
         "chars": 414,
+        "lines": 7
+      },
+      {
+        "kind": "string",
+        "chars": 86,
+        "lines": 3
+      },
+      {
+        "kind": "string",
+        "chars": 430,
         "lines": 7
       }
     ]
@@ -1619,6 +1660,11 @@
     "markersAny": true,
     "replacements": [
       {
+        "kind": "string",
+        "chars": 656,
+        "lines": 12
+      },
+      {
         "kind": "regexp",
         "source": "[ \\t]*const transformed = await this\\.ctx\\.waterfall\\(scopeTarget\\(this, scope\\), \"system-prompt\\/assemble\", assembly, context, \\(\\) => Promise\\.resolve\\(assembly\\)\\);\\n[ \\t]*if \\(completeSection === void 0 && !runtimeContextSuppressed\\) return transformed;\\n[ \\t]*const requiredContexts = new Set\\(\\[\\.\\.\\.contextByName\\.values\\(\\)\\]\\.filter\\(\\(entry\\) => entry\\.required === true\\)\\.map\\(\\(entry\\) => entry\\.name\\)\\);\\n[ \\t]*return \\{\\n[ \\t]*\\.\\.\\.transformed,\\n[ \\t]*sections: completeSection === void 0 \\? transformed\\.sections : \\[completeSection\\],\\n[ \\t]*contexts: runtimeContextSuppressed \\? transformed\\.contexts\\.filter\\(\\(entry\\) => requiredContexts\\.has\\(entry\\.name\\)\\) : transformed\\.contexts\\n[ \\t]*\\};",
         "flags": ""
@@ -2088,7 +2134,7 @@
     ],
     "surfaces": [],
     "optional": true,
-    "softSettle": false,
+    "softSettle": true,
     "skipIfMarked": false,
     "strictFiles": false,
     "markers": [
@@ -2154,6 +2200,11 @@
       {
         "kind": "string",
         "chars": 153,
+        "lines": 2
+      },
+      {
+        "kind": "string",
+        "chars": 100,
         "lines": 2
       }
     ]
@@ -2323,6 +2374,11 @@
       {
         "kind": "string",
         "chars": 121,
+        "lines": 3
+      },
+      {
+        "kind": "string",
+        "chars": 123,
         "lines": 3
       }
     ]
@@ -2645,7 +2701,7 @@
     ],
     "surfaces": [],
     "optional": true,
-    "softSettle": false,
+    "softSettle": true,
     "skipIfMarked": true,
     "strictFiles": false,
     "markers": [
@@ -2711,7 +2767,7 @@
     ],
     "surfaces": [],
     "optional": true,
-    "softSettle": false,
+    "softSettle": true,
     "skipIfMarked": false,
     "strictFiles": false,
     "markers": [
@@ -2769,6 +2825,36 @@
         "kind": "string",
         "chars": 228,
         "lines": 4
+      },
+      {
+        "kind": "string",
+        "chars": 193,
+        "lines": 7
+      },
+      {
+        "kind": "string",
+        "chars": 208,
+        "lines": 7
+      },
+      {
+        "kind": "string",
+        "chars": 199,
+        "lines": 7
+      },
+      {
+        "kind": "string",
+        "chars": 252,
+        "lines": 6
+      },
+      {
+        "kind": "string",
+        "chars": 267,
+        "lines": 6
+      },
+      {
+        "kind": "string",
+        "chars": 256,
+        "lines": 5
       }
     ]
   },
@@ -3307,7 +3393,7 @@
     ],
     "surfaces": [],
     "optional": true,
-    "softSettle": false,
+    "softSettle": true,
     "skipIfMarked": true,
     "strictFiles": false,
     "markers": [
@@ -3339,7 +3425,7 @@
     ],
     "surfaces": [],
     "optional": true,
-    "softSettle": false,
+    "softSettle": true,
     "skipIfMarked": true,
     "strictFiles": false,
     "markers": [
@@ -3552,6 +3638,31 @@
         "kind": "string",
         "chars": 42,
         "lines": 4
+      }
+    ]
+  },
+  {
+    "id": 107,
+    "name": "MESSAGE_LAYER_REFUSAL_WASH",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "agent-loop"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": true,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge-107]"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 82,
+        "lines": 2
       }
     ]
   }

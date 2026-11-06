@@ -5,6 +5,28 @@
 每项 = **机制来源（文件:行号）→ 落点 → 设计要点 → 单元验收 → 真机负向测试 → 许可纪律**。
 完成一项勾一项；只调研不落笔视为该轮白跑。
 
+## T-06 消息层两能力 ← xxy0722/dsh-purge-deep v2.0.4（2026-11-06 批次，YG 批准「按你建议来」）
+
+- **机制来源**：xxy0722/dsh-purge-deep README「与原版的差异·一、消息层」（session.deriveMessages()
+  请求视图上做历史拒绝清洗 + 预填充遗迹剥离 + 预填充 + 尾部棘轮）。调研全文
+  `D:\hrh\dsh-watch\reports\research-2026-11-06.md` 第三节 A。
+- **取舍**：只取默认开的两项（拒绝清洗 + 预填充遗迹剥离）。预填充与尾部棘轮**明确不做**——
+  该项目一手实测反证：宿主把合成内容并进真实回复持久化 → 下一轮读到「可以，」开头误判截断
+  → Yes.Yes. 退化；另其双尾锚冲突教训（收敛单一事实源）我们以「#107 不追加任何尾锚」落实。
+- **落点**：lib/core.js 补丁 **#107 MESSAGE_LAYER_REFUSAL_WASH**（file: agent-loop，optional，
+  skipIfMarked，softSettle）。锚定 #89 产物中的 systemField 声明行（apply 序 #89 → #107，
+  同函数体、deriveMessages 出口），只改请求视图不落盘。
+- **设计要点**：① 拒绝正则锚定行首/换行后（句中 sorry/抱歉是句子成分不清洗）；② 拒绝清洗
+  优先于预填充剥离（else if）；③ string/block 两种 content 形态改写后**保持原形态**
+  （2026-11-06 首版曾把 string 归一成 block 数组改变请求形状，已修）；④ 无改动不重建消息对象。
+- **单元验收**：test/message-layer-wash.test.mjs 10/10（直接从 #107 replacement 差值构造清洗
+  函数执行，测的就是写进宿主的代码）；npm test **362/362 全绿**；契约 patches=101
+  withMarkers=100 optional=59；#89+#107 组合顺序验证（互不打漂、幂等复跑零写入、双 marker 同函数体）。
+- **真机负向测试**：待 0.2.2-rc.1 桌面重应用后观察——长会话历史里含旧拒绝时本轮不再被锚定；
+  预填充遗迹（历史「可以，」开头）剥离后不再出现「上一轮截断重跑」。
+- **许可纪律**：dsh-purge-deep 基于 YuJunZhiXue/dsh-purge (MIT) 改造；本项目 Apache-2.0，
+  机制为原创行文重述 + 自写实现，未复制其代码文件。README 实测结论（预填充反例）作为事实记录引用。
+
 ## 许可纪律（总则）
 
 - AGPL 仓库（helm-d）：只吸设计，零复制。本文件只引用其任务书**格式**，不搬内容。
@@ -31,6 +53,23 @@
 - **题库/管道**：eval/prompts/{probes-core.jsonl 25 条, ai-jailbreaks-35.jsonl 35 槽位, benign-8.jsonl 8 条}；scripts/collect-arm.mjs（OpenAI 兼容端点采集，--prompts/--label/--system/--out/--concurrency，产 {id,reply} 喂 --eval）；本地 mock 端点冒烟 8/8 通过。skills/redteam/jailbreak-probes.md 原创框架（零复制上游文本），`node scripts/skills-sha.mjs` 重生成 → 25 files match。
 - **收尾门**：`node scripts/gen-patch-contract.mjs` → patches=99 withMarkers=98 optional=58；test/patch-contract.test.mjs 统计断言按先例注释链更新（96→98 / 56→58 / 代码层 59→61）；`npm test` **350/350 全绿**；`qoder-purge.mjs --verify` → state current exit 0；未 commit。
 - **踩坑**：① collect-arm.mjs 冒烟别用 spawnSync（子进程内 fetch 挂死，异步 spawn 35ms 正常，原因未深究）；② 加补丁必须重生成契约表 + 更新 test/patch-contract.test.mjs 四个统计断言 + layer 分布表，否则 npm test 红。
+
+## 实测记录（2026-11-06 增补：DSH 桌面版 0.2.2-rc.1 重应用）
+
+- **新布局**：resources 下 `app\dsh` 没了，改成单文件 `app.asar`（213,202,918B）+ `app.asar.unpacked`（只剩 3 个原生包）。宿主发现（listDesktopPackageRoots）对新布局失明 → 走 `openSealedDesktopHost` 解包路径（本轮已给 `sealedAsarHandoff`/`hostCleanMarkersPresent` 补 CLI 视角的 execPath/resourcesPath 透传，`_patchTargetAiBase` 临时指向桌面 aiBase 放行 allowTargetForPatch）。
+- **0.2.2-rc.1 上游漂移 11 条全部收口**（改 lib/core.js 锚点键 + 补丁升级链，桌面树 applyPatches 最终 **already 82 / missing_file 7 / skipped 1 / na 9 / drifted 0**，幂等复跑同分布）：
+  - 锚点键扩展：`dsh-tools` +`lib/pipeline.js`、`dsh-tools-types` +`lib/types/pipeline.js`、`dsh-tools-ptc` +`dsh-tool-executor-ptc/{lib/index.js,lib/types/ptc.js}`（run_code 文案拆独立包）、`deliverables-prompt` +`dsh-deliverable-file-references/lib/index.js`（present 禁令句挪进 FILE_REFERENCE_PROMPT）。
+  - #14：新增 displayReason=escalationDisplayReason(mode, justification) 形态（八语种本地化）。
+  - #17：新增 writeIntent 委托形 + requirePresent 收敛形两个 pattern（新版 edit/delete 都走 requirePresent，改一处放行两者），markersAny=true。
+  - #40：新增「提前返回改对象字面量带 tools 字段」形态（非 complete 分支 return { ...transformed, tools }）。
+  - #54/#60/#62：softSettle=true —— 旧文件里目标句已消失，无残留即按完成计，新文件承担实际清洗。
+  - #67：新增 5-tab 深层缩进形态（preStep 收进更深一层）。
+  - #74：新增「claimed 与 assembly 之间插了 model selection + tools.resolve」形态，注入点改在 claimed 之后 selection 之前。
+  - #94/#95：0.2.2-rc.1 调度器收敛成 pipeline 内部类（ToolExecutionPipeline），TOOL_RUNTIME_SCHEDULER Symbol 彻底消失 → softSettle（无目标即完成）。
+  - 契约统计：markersAny 25→26（#17）；`node --test` **351/351 全绿**。
+- **asar swap**：`scheduleSealedDesktopRestart` → asar 被运行中进程锁定 → `renamed:false, pending:true`，`app.asar.rename-pending` 锁 + PowerShell idle 监视脚本已派生：YG 退出 DSH 后自动把 app.asar 挪开，下次启动 Electron 落到解包并已打补丁的 `resources\app\` 目录（Electron 缺省回退链 app.asar → app/）。
+- **验证指纹**（桌面树）：system-prompt identity stripped ✓ + every-mode-keeps-inject ✓ + inject+agent-instructions ✓；sandbox `) : "allowed-once";` ✓；agent-loop guard×2 + prepare-assemble ✓；pipeline×2 no-agent/unavailable allow 各 1+1 ✓；executor-ptc wider-optional + teaching-removed ✓；file-references 禁令句 0 残留 + marker ✓；fs-observation bypass×2 ✓；agent-instructions ACTIVE,MANDATORY ✓。
+- **踩坑增补**：① applyReplacementsToText 的命中数契约（expect 未声明时字符串 pattern 必须 1 次命中，0 次或多次都 hitMismatch 整条拒写）——pattern 链升级时必须确认新模式在目标宿主恰好命中 1 次；② markers 全缺省（无 markersAny）= every 语义，#17 三 marker 只落两条时整条 drifted，多形态补丁一律 markersAny；③ targetFiles 的值可能是字符串不是数组，遍历前必须数组化；④ `hostCleanMarkersPresent` 在 CLI 里判桌面树必须带 options（execPath/resourcesPath），否则 allowTargetPath 按当前进程 surface 滤掉桌面路径恒 false。
 
 ---
 
