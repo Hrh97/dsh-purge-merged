@@ -3489,5 +3489,70 @@
         "lines": 1
       }
     ]
+  },
+  {
+    "id": 104,
+    "name": "SHELL_ENV_PRESET_AND_BLOCK",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "bash-local"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge-104]"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 19,
+        "lines": 2
+      },
+      {
+        "kind": "string",
+        "chars": 17,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 52,
+        "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 105,
+    "name": "CONTEXT_DEDUPE_OPTIONAL",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "compaction-tool-result-pruner"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge-105]"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 44,
+        "lines": 2
+      },
+      {
+        "kind": "string",
+        "chars": 42,
+        "lines": 4
+      }
+    ]
   }
 ]

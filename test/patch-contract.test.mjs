@@ -109,10 +109,12 @@ test("契约表统计与源码一致", () => {
   // #99（技能徽章描述，带 marker）、#100（host 信号退出日志，带 marker）。
   // 93 → 95：合并上游 1.1.90 后带入 #92/#93（DESKTOP_HOST/MAIN_EXIT_TRACE，均带 marker）。
   // 95 → 96：#103 DESKTOP_WELCOME_COOKIE_SWEEP（#209）带 marker。
-  assert.equal(withMarkers, 96, "带 marker 的补丁数变了");
+  // 96 → 98：吸收 6zev/oc-purge 0.5.0 新增 #104 SHELL_ENV_PRESET_AND_BLOCK /
+  // #105 CONTEXT_DEDUPE_OPTIONAL，均带 marker（[dsh-purge-104]/[dsh-purge-105]）。
+  assert.equal(withMarkers, 98, "带 marker 的补丁数变了");
   // 50 → 53：上面三条全部 optional。53 → 55：#92/#93 同为 optional。
-  // 55 → 56：#103 同为 optional。
-  assert.equal(contract.filter((entry) => entry.optional).length, 56, "optional 补丁数变了");
+  // 55 → 56：#103 同为 optional。56 → 58：#104/#105 同为 optional（宿主缺锚不算失败）。
+  assert.equal(contract.filter((entry) => entry.optional).length, 58, "optional 补丁数变了");
   const regex = contract.reduce((sum, entry) => sum + entry.replacements.filter((item) => item.kind === "regexp").length, 0);
   // 6 → 7：吸收上游 #188 后 #77（REWIND_DROP_SENT_ON_APPEND）从「写死 5 行 + rc.2 补丁行」
   // 两条字面量改成一条锚首尾 + 非贪婪窗口的正则，官方在中间插行也照样命中。
@@ -133,8 +135,9 @@ test("layer 分布稳定（新增补丁要显式更新这张表）", () => {
   // 25 → 27：#98/#99 都是提示词层；#100 落在代码层（55 → 56）。
   // 56 → 58：合并上游 1.1.90 带入 #92/#93（DESKTOP_HOST/MAIN_EXIT_TRACE，均为代码层）。
   // 58 → 59：#103 DESKTOP_WELCOME_COOKIE_SWEEP 落在代码层。
+  // 59 → 61：#104（dsh-bash-local env 预设+硬拦截）与 #105（tool-result 去重）均为代码层。
   assert.equal(counts.get("提示词|Prompt"), 27);
-  assert.equal(counts.get("代码|Code"), 59);
+  assert.equal(counts.get("代码|Code"), 61);
   assert.equal(counts.get("工具|Tools"), 8);
   assert.equal(counts.get("0.1.5 兼容|0.1.5"), 1);
   assert.equal(counts.get("0.2.0 兼容|0.2.0"), 2);
