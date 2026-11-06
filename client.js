@@ -3077,7 +3077,7 @@ body[data-ds-dark-theme] .rt-rep-step-no,.dshp-dock[data-theme="dusk"] .rt-rep-s
 .dshp-rewind:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover,rgba(127,127,127,.12));color:var(--dsw-alias-label-primary,currentColor)}
 .dshp-rewind:disabled{opacity:.4;cursor:default}
 .dshp-rewind svg{display:block}
-.dshp-rewind-menu{position:fixed;z-index:2147483000;box-sizing:border-box;min-width:220px;padding:4px;border:0;border-radius:12px;background:var(--dsw-specific-menu,#fff);color:var(--dsw-alias-label-primary,#1a1a1a);--dsw-elevation-stroke-color:var(--dsw-alias-border-l1);box-shadow:var(--dsw-elevation-prominent,0 8px 24px rgba(0,0,0,.16));transform:translateY(-100%)}
+.dshp-rewind-menu{position:fixed;z-index:950;box-sizing:border-box;min-width:220px;padding:4px;border:0;border-radius:12px;background:var(--dsw-specific-menu,#fff);color:var(--dsw-alias-label-primary,#1a1a1a);--dsw-elevation-stroke-color:var(--dsw-alias-border-l1);box-shadow:var(--dsw-elevation-prominent,0 8px 24px rgba(0,0,0,.16));transform:translateY(-100%)}
 body[data-ds-dark-theme] .dshp-rewind-menu{background:var(--dsw-specific-menu,#32312d);color:var(--dsw-alias-label-primary,#e6e2db);--dsw-elevation-stroke-color:var(--dsw-alias-border-l1,#3f3d38);box-shadow:var(--dsw-elevation-prominent,0 10px 28px rgba(0,0,0,.45))}
 .dshp-rewind-item{display:flex;flex-direction:column;gap:2px;width:100%;padding:8px 10px;border:0;border-radius:8px;background:transparent;color:inherit;text-align:left;cursor:pointer;font:12px/1.3 var(--ds-font-sans,system-ui,sans-serif)}
 .dshp-rewind-item:hover{background:var(--dsw-alias-interactive-bg-hover,rgba(127,127,127,.12))}
@@ -9142,6 +9142,28 @@ body[data-ds-dark-theme] .rt-scope-testing,.dshp-dock[data-theme="dusk"] .rt-sco
 			return best;
 		}
 
+		/* #211（上游 1.1.91 择段移植）：锚点有矩形不代表用户看得见。设置 / 账户这类页面是挂在 body 上的
+		   aria-modal 模态，会话面原地保留、composer 仍有尺寸，按钮就会飘在模态上面。
+		   命中任一情况都收起来，并把预留的 padding 还回去。 */
+		function rewindSurfaceObscured(anchor) {
+			if (!anchor || !anchor.isConnected) return true;
+			if (typeof anchor.checkVisibility === "function") {
+				let visible = true;
+				try {
+					visible = anchor.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true });
+				} catch { /* 旧引擎不认 options，退回矩形检查 */ }
+				if (!visible) return true;
+			}
+			try {
+				if (anchor.closest && anchor.closest('[inert], [aria-hidden="true"]')) return true;
+			} catch { /* ignore */ }
+			const dialogs = document.querySelectorAll('[role="dialog"][aria-modal="true"]');
+			for (let i = 0; i < dialogs.length; i += 1) {
+				if (!dialogs[i].contains(anchor)) return true;
+			}
+			return false;
+		}
+
 		function placeRewindHost(host, anchor, reserve) {
 			if (!host || !anchor) return;
 			const rect = anchor.getBoundingClientRect();
@@ -9174,7 +9196,7 @@ body[data-ds-dark-theme] .rt-scope-testing,.dshp-dock[data-theme="dusk"] .rt-sco
 					el.setAttribute(REWIND_HOST_ATTR, "");
 					document.body.appendChild(el);
 				}
-				el.style.cssText = "position:fixed;z-index:2147482500;display:none;left:0;top:0;";
+				el.style.cssText = "position:fixed;z-index:900;display:none;left:0;top:0;";
 				setHost(el);
 				let padded = null;
 				let warned = false;
@@ -9202,14 +9224,17 @@ body[data-ds-dark-theme] .rt-scope-testing,.dshp-dock[data-theme="dusk"] .rt-sco
 						}
 						return;
 					}
-					// 按钮标签会随失败提示变长，预留宽度跟着实测宽度走，避免压到模型选择器。
-					const reserve = Math.max(REWIND_RESERVE_PX, (el.offsetWidth || 60) + 12);
-					const pad = sessionRef.current ? reserve + "px" : (anchor.dataset.dshpPad || "");
-					if (anchor.style.paddingLeft !== pad) anchor.style.paddingLeft = pad;
-					if (!sessionRef.current) {
+					// #211（上游 1.1.91 择段移植）：会话不在或锚点被模态遮住时收起并还 padding。
+					if (!sessionRef.current || rewindSurfaceObscured(anchor)) {
+						const restore = anchor.dataset.dshpPad || "";
+						if (anchor.style.paddingLeft !== restore) anchor.style.paddingLeft = restore;
 						el.style.display = "none";
 						return;
 					}
+					// 按钮标签会随失败提示变长，预留宽度跟着实测宽度走，避免压到模型选择器。
+					const reserve = Math.max(REWIND_RESERVE_PX, (el.offsetWidth || 60) + 12);
+					const pad = reserve + "px";
+					if (anchor.style.paddingLeft !== pad) anchor.style.paddingLeft = pad;
 					placeRewindHost(el, anchor, reserve);
 				};
 				place(true);

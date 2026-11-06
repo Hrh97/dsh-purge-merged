@@ -18,10 +18,14 @@ import {
 const MASTER_URL = "https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/master";
 const COMMIT_URL = "https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/abc1234567890";
 
-function withTempProfile(lockText) {
+function withTempProfile(lockText, pkgManager) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "dsh-purge-test-"));
   if (lockText !== undefined) {
     fs.writeFileSync(path.join(dir, "pnpm-lock.yaml"), lockText, "utf8");
+  }
+  // #209：pnpmMajor 会读 profile 的 package.json packageManager 字段判断大版本
+  if (pkgManager !== undefined) {
+    fs.writeFileSync(path.join(dir, "package.json"), JSON.stringify({ packageManager: pkgManager }), "utf8");
   }
   return dir;
 }
@@ -92,7 +96,9 @@ test("URL 键写回带引号且 round-trip 无损", () => {
   assert.deepEqual(parseAllowBuildLine(plain), { key: "dsh-purge", value: "true" });
 });
 
-test("污染的 allowBuilds 重写后只剩期望键", () => {
+test("污染的 allowBuilds 重写后只剩期望键（pnpm 11：URL 键全清，#185）", () => {
+  // #209 后保留与否按 pnpm 大版本走：这里钉死 pnpm 11，维持 #185 的全清语义
+  const dir = withTempProfile(undefined, "pnpm@11.0.0");
   const polluted = [
     "packages:",
     "  - '.'",
@@ -107,7 +113,7 @@ test("污染的 allowBuilds 重写后只剩期望键", () => {
     `  dsh-purge@${MASTER_URL}: true`,
     "",
   ].join("\n");
-  const next = rewritePnpmAllowBuilds(polluted);
+  const next = rewritePnpmAllowBuilds(polluted, dir);
   const keys = next.split("\n").filter((line) => parseAllowBuildLine(line)).map((line) => parseAllowBuildLine(line).key);
   // 期望键：只有裸包名（#185，不再写 URL 键）
   const wanted = ["cpu-features", "ssh2", ...purgePnpmBuildSpecs()];
@@ -164,14 +170,15 @@ test("期望键只有裸包名，不含任何 URL 键（#185）", () => {
   assert.deepEqual(purgePnpmBuildSpecs(dir), ["dsh-purge"]);
 });
 
-test("输入只含 URL 键时重写后只剩裸包名", () => {
+test("输入只含 URL 键时重写后只剩裸包名（pnpm 11，#185）", () => {
+  const dir = withTempProfile(undefined, "pnpm@11.0.0");
   const onlyUrl = [
     "allowBuilds:",
     `  "dsh-purge@${MASTER_URL}": true`,
     `  dsh-purge@${MASTER_URL}: true`,
     "",
   ].join("\n");
-  const next = rewritePnpmAllowBuilds(onlyUrl);
+  const next = rewritePnpmAllowBuilds(onlyUrl, dir);
   const keys = next.split("\n").filter((line) => parseAllowBuildLine(line)).map((line) => parseAllowBuildLine(line).key);
   assert.deepEqual(keys, ["dsh-purge"]);
   assert.equal(next.includes("dsh-purge@"), false);
@@ -179,7 +186,7 @@ test("输入只含 URL 键时重写后只剩裸包名", () => {
   assert.equal(validateAllowBuildRewrite(next), true);
 });
 
-test("固定 commit 安装：重写后只剩裸包名，历史 URL / 畸形键全清", () => {
+test("固定 commit 安装：重写后只剩裸包名，历史 URL / 畸形键全清（pnpm 11，#185）", () => {
   const dir = withTempProfile([
     "lockfileVersion: '9.0'",
     "",
@@ -191,7 +198,7 @@ test("固定 commit 安装：重写后只剩裸包名，历史 URL / 畸形键�
     `        specifier: ${COMMIT_URL}`,
     `        version: dsh-purge@${COMMIT_URL}`,
     "",
-  ].join("\n"));
+  ].join("\n"), "pnpm@11.0.0");
   const polluted = [
     "packages:",
     "  - '.'",
@@ -212,6 +219,43 @@ test("固定 commit 安装：重写后只剩裸包名，历史 URL / 畸形键�
   assert.equal(keys.includes("ssh2"), true);
   // 只写裸包名，不带引号
   assert.equal(next.split("\n").some((line) => line === "  dsh-purge: true"), true);
+});
+
+test("pnpm 12+/判断不出版本：来源键原样保留，避免重复弹审批（#209）", () => {
+  const urlKeyLine = `  "dsh-purge@${MASTER_URL}": true`;
+  const base = [
+    "allowBuilds:",
+    urlKeyLine,
+    "  ssh2: true",
+    "",
+  ].join("\n");
+  // package.json 声明 pnpm@12：URL 键是有效审批，原样保留
+  const dir12 = withTempProfile(undefined, "pnpm@12.0.0");
+  const next12 = rewritePnpmAllowBuilds(base, dir12);
+  assert.equal(next12.includes(`dsh-purge@${MASTER_URL}`), true);
+  assert.equal(validateAllowBuildRewrite(next12), true);
+  // .modules.yaml 实测值（pnpm 自己写的，pnpmMajor 的第一读口）也是 12：同样保留
+  const dirYaml = withTempProfile(undefined);
+  fs.mkdirSync(path.join(dirYaml, "node_modules"), { recursive: true });
+  fs.writeFileSync(path.join(dirYaml, "node_modules", ".modules.yaml"), "packageManager: pnpm@12.4.0\n", "utf8");
+  const nextYaml = rewritePnpmAllowBuilds(base, dirYaml);
+  assert.equal(nextYaml.includes(`dsh-purge@${MASTER_URL}`), true);
+  // 版本判断不出：也保留，避免删掉用户配置
+  const nextUnknown = rewritePnpmAllowBuilds(base);
+  assert.equal(nextUnknown.includes(`dsh-purge@${MASTER_URL}`), true);
+  // 规范裸包名仍然要补上（pnpm 12 下对来源安装无效但无害）
+  assert.equal(nextUnknown.split("\n").some((line) => line === "  dsh-purge: true"), true);
+  // 截断键 / 版本键仍按 #180 自愈丢弃，与 pnpm 版本无关
+  const truncated = [
+    "allowBuilds:",
+    "  dsh-purge@https: true",
+    "  dsh-purge@1.1.81: true",
+    "",
+  ].join("\n");
+  const nextTrunc = rewritePnpmAllowBuilds(truncated);
+  assert.equal(nextTrunc.includes("dsh-purge@https"), false);
+  assert.equal(nextTrunc.includes("dsh-purge@1.1.81"), false);
+  assert.equal(nextTrunc.split("\n").some((line) => line === "  dsh-purge: true"), true);
 });
 
 test("幂等：健康文件重写输出等于输入，零写入", () => {
