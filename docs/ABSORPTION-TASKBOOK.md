@@ -172,3 +172,35 @@
 3. `node lib/qoder/qoder-purge.mjs --verify` 仍 exit 0（② 修复不回归）；
 4. 本任务书每项状态翻成 ✅ 并补「实测记录」一行；
 5. 不 commit（等 YG 发话）。
+
+---
+
+# 附：本地拉满冲刺实录（2026-11-06，YG「有没有办法本地这边继续拉满?」）
+
+## 拉满前盘点（desktop 视角，DSH_SURFACE=desktop + 桌面解包树 aiBase）
+
+初始：applied 92 / na 7 / skipped 1 / drifted 1（合计 101）。
+
+## 修复清单（全部落地）
+
+| # | 问题 | 根因 | 修法 | 结果 |
+|---|------|------|------|------|
+| #61/#98 | na（targetFiles 键 undefined） | targetFiles 映射表缺 `"sandbox-policy"` 键，而补丁 file:["sandbox-policy"] | lib/core.js targetFiles 插入 sandbox-policy 键（deepPkg dsh-sandbox-policy/lib/index.js + root packages/sandbox/sandbox-policy 兜底） | applied |
+| #45/#46/#83-#100 组 | 误报 na/missing_file | officialShellMain()（lib/core.js:7428）的 findDesktopAppExecutable() 无 discover，CLI 进程 cwd 不在 Harness 树 → exe="" | 改 `findDesktopAppExecutable({ discover: true })` | 8+ 条转 applied |
+| #82 | drifted（真 drift） | pattern 依赖两行相邻，rc.1 bundle 在中间插 1705 行 mime 表 | lib/core.js:6484-6497 重锚单行 `import { REMOTE_STREAM_MUX_PATH, ... } from "@deepseek-ai/dsh-api-gateway/stream-protocol";\n`（真机 :18 唯一），marker 不变（skipIfMarked 兼容老产物） | applied |
+| #104/#105 | opt-in 不激活 | 行为开关 DSH_PURGE_SHELL_BLOCK / DSH_PURGE_COMPACT 默认未设 | 新增 **#108 DESKTOP_PURGE_RUNTIME_DEFAULTS**：桌面壳 main.js（#82 锚点，desktop-only，non-clobber）缺省补 "1"，进程树根注入全子进程继承；想关显式设 "0" | applied，重启后默认生效 |
+
+## 终态
+
+- **applied 96 / na 5 / skipped 1 / drifted 0（合计 102）**；npm test 367/367；qoder:sync 零漂（14121 chars）；真机 main.js [dsh-purge-108] 在 :20。
+- na 5 定案为终态：#30/#31/#64/#65（dsh-hooks-claude-code/dsh-hooks-codex 被 rc.1 官方砍线，v3→v4 session 迁移表已归档为 released V3 plugin）+ #76（preset-unrestricted 包不存在）。无靶可打，官方恢复 hooks 线再重锚。
+- skipped 1 = #80 MINIMAL_OFFICIAL_TOOLSET（撤销型 self-marked，设计如此）。
+
+## 本轮新教训（复用）
+
+1. **往 lib/core.js 写带 `\n`/`\t` 的字符串字面量**：edit 工具会把源码 `\n` 写成行续接（5C 0A）。写完必须 `node -e` 打印 replacement 验证字节形态（5C 6E = `\n` 才对）。
+2. **契约表测试红了先重生成**：`node scripts/gen-patch-contract.mjs` → test/patch-contract.json 刷新即绿，别手改断言以外的数字。
+3. **#82 这类 rc.5 时代双行锚补丁**在 rc.1 bundle 重排后全部要按「单行唯一锚」重验；单行锚优先选 import 行（bundle 里唯一且稳定）。
+4. assert.deepEqual 才能比数组字面量；assert.equal 比引用必挂。
+5. status 盘点必须 `DSH_SURFACE=desktop` + aiBase 指桌面解包树（`D:\Program Files\DSH\resources\app\dsh\node_modules\@deepseek-ai`），CLI 默认 web 视角 + web 检出树，会误报。
+6. cordis 事件瀑布 ≠ claude-code hooks 模型：rc.1 内核 agent/pre-step 决策只有 enter/reject（dsh-agent-loop/lib/index.js:691/:705），没有 decision deny/ask 词汇——旧 hooks 补丁思维在新内核无对应物，未来注入面走 pre-step/turn-stopping 事件（agent-loop:797）。

@@ -113,10 +113,12 @@ test("契约表统计与源码一致", () => {
   // #105 CONTEXT_DEDUPE_OPTIONAL，均带 marker（[dsh-purge-104]/[dsh-purge-105]）。
   // 98 → 99：#106 AGENT_REQUEST_ALIAS_NOT_A_SWITCH（rc.1 不变式）带 marker。
   // 99 → 100：#107 MESSAGE_LAYER_REFUSAL_WASH（消息层拒绝清洗+预填充遗迹剥离）带 marker。
-  assert.equal(withMarkers, 100, "带 marker 的补丁数变了");
+  // 100 → 101：#108 DESKTOP_PURGE_RUNTIME_DEFAULTS（桌面壳根进程补 env 缺省值，激活 #104/#105）带 marker。
+  assert.equal(withMarkers, 101, "带 marker 的补丁数变了");
   // 50 → 53：上面三条全部 optional。53 → 55：#92/#93 同为 optional。
   // 55 → 56：#103 同为 optional。56 → 58：#104/#105 同为 optional（宿主缺锚不算失败）。
-  assert.equal(contract.filter((entry) => entry.optional).length, 59, "optional 补丁数变了");
+  // 58 → 59：#107 同为 optional。59 → 60：#108 同为 optional。
+  assert.equal(contract.filter((entry) => entry.optional).length, 60, "optional 补丁数变了");
   const regex = contract.reduce((sum, entry) => sum + entry.replacements.filter((item) => item.kind === "regexp").length, 0);
   // 6 → 7：吸收上游 #188 后 #77（REWIND_DROP_SENT_ON_APPEND）从「写死 5 行 + rc.2 补丁行」
   // 两条字面量改成一条锚首尾 + 非贪婪窗口的正则，官方在中间插行也照样命中。
@@ -142,19 +144,21 @@ test("layer 分布稳定（新增补丁要显式更新这张表）", () => {
   // 59 → 61：#104（dsh-bash-local env 预设+硬拦截）与 #105（tool-result 去重）均为代码层。
   // 61 → 62：#106（rc.1 prepareRequest 不变式忽略 -purge 别名）落在代码层。
   // 62 → 63：#107 MESSAGE_LAYER_REFUSAL_WASH 落在代码层。
+  // 63 → 64：#108 DESKTOP_PURGE_RUNTIME_DEFAULTS 落在代码层。
   assert.equal(counts.get("提示词|Prompt"), 27);
-  assert.equal(counts.get("代码|Code"), 63);
+  assert.equal(counts.get("代码|Code"), 64);
   assert.equal(counts.get("工具|Tools"), 8);
   assert.equal(counts.get("0.1.5 兼容|0.1.5"), 1);
   assert.equal(counts.get("0.2.0 兼容|0.2.0"), 2);
 });
 
-test("desktop-only 补丁恰好只有 9 条且都声明了 surfaces", () => {
+test("desktop-only 补丁恰好只有 10 条且都声明了 surfaces", () => {
   const desktop = contract.filter((entry) => entry.surfaces.includes("desktop"));
   // 5 → 6：吸收上游 #188 后新增 #100（host 信号退出日志），同样只对桌面面生效。
   // 6 → 8：上游 1.1.90 新增 #92/#93（DESKTOP_HOST/MAIN_EXIT_TRACE），同样只对桌面面生效。
   // 8 → 9：#103（#209 welcome cookie 清扫）同样只对桌面面生效。
-  assert.equal(desktop.length, 9);
+  // 9 → 10：#108 DESKTOP_PURGE_RUNTIME_DEFAULTS（桌面壳根进程 env 缺省值）同样只对桌面面生效。
+  assert.equal(desktop.length, 10);
   for (const entry of desktop) assert.deepEqual(entry.surfaces, ["desktop"]);
 });
 

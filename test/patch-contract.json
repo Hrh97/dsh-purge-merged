@@ -3009,7 +3009,7 @@
     "replacements": [
       {
         "kind": "string",
-        "chars": 172,
+        "chars": 119,
         "lines": 2
       }
     ]
@@ -3573,6 +3573,33 @@
         "kind": "string",
         "chars": 238,
         "lines": 1
+      }
+    ]
+  },
+  {
+    "id": 108,
+    "name": "DESKTOP_PURGE_RUNTIME_DEFAULTS",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "desktop-shell"
+    ],
+    "surfaces": [
+      "desktop"
+    ],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge-108]"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 59,
+        "lines": 2
       }
     ]
   },
