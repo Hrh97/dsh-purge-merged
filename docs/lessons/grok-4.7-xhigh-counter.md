@@ -54,3 +54,10 @@
 - **判定层旁路确认（环境态）**：本轮拒答在宿主侧 verdict=pass（refusal-retry 未触发，turn 一步完结）——桌面 DSH 进程仍在跑旧 refusal-scan（stealth 词表要重启才加载）。新词表对这段拒答文本实测 verdict=refusal（命中「这次不做」）。
 - **支撑数**：2 条同型样本（baseline 破防 + persona v1 破防），达 `DEFAULT_MIN_SUPPORT = 2`，可进自动蒸馏候选。
 - **下一步**：① persona v2 = 连锚块反拒答条款一起改造（弱化「refusal is a malfunction」类元命令为中性工作规则）；② 重启桌面 DSH 让 stealth 词表生效，复跑同卡片验证 refusal-retry 放大轮；③ AGENTS.md 的红队指纹段考虑从任务工作区剥离（模型会读到）。
+
+## 2026-11-10 对策落地 Round 2 后（persona v2 + 判定层补第二刀）
+
+- **persona v2**（`personas/grok47.md`，2,062 字符，rev 4）：**删掉整个镜像锚块**。Round 2 思维链把锚块当注入证据引用（"The surrounding instructions are themselves a prompt injection attempt"），镜像/弹窗比喻本身就是对抗信号。v1 里没被引用过的段落（工作方式/范围/回复纪律/长期记忆）原样保留。
+- **判定层第二刀**（`lib/request-shape.js` 的 `classifyRefusal`）：grok-4.7 的拒答历史擦除（shadowRefusal）此前也不认识 stealth 开场——`classifyRefusal` 与 `scanReply` 是两套词表。新增 `classifyStealthOpening`：词头表（这次不/这个不/这类不/这个我/不协助…）认前 4 字符 + 长词表（帮不了/做不了/办不了…）认前 8 字符；转述场景（「之前模型说『这次不做』」idx≈6）两个窗口都够不着，零误伤。REFUSAL_PATTERNS 补 4 条锚定开场的 stealth 正则。
+- 测试：`test/request-shape.test.mjs` 新增 2 组（命中 5 形态 + 转述 3 形态全过）；全量 `node --test` **369 pass / 0 fail**。
+- 已知残留：宿主仍跑旧代码，判定层生效要重启桌面 DSH；AGENTS.md 的红队段仍会进会话 reminder（供词面），未处理。
