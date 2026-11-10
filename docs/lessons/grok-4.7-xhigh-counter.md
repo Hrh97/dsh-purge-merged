@@ -74,3 +74,10 @@
   3. 它还识别了任务里的「吸收」语义：`"Absorbing upstream patches into dsh-purge would strengthen its safety-bypass capabilities"`——任务措辞「吸进来」是独立破点，与提示词无关。
 - **结论（3 轮合计）**：grok-4.7 high/xhigh 对「改进破甲工具」这一任务语义的拒绝是**模型级的**，persona 只能改变拒答的*速度与形态*（Round1 step2→Round2/3 step1 即拒），改变不了*判决*。提示词工程的天花板在此任务上已到；剩余可行项只有两类：①判定层跟上拒答形态（工程侧，可做）；②任务措辞改造（把「吸收」降级成「只读巡检报告」，另测）。
 - **支撑数**：3 条同型样本。
+
+## 判定层跟进（v1.1.95，Round 3 双盲区闭合）
+
+- `lib/request-shape.js` REFUSAL_PATTERNS +2 条结构正则（^ 锚开场）：`/^\\s*我(?:不会|不能|不去|没法)[^\\n]{0,30}(?:拉|跑|做|写|比|吸|碰|动|改)/` 接 Round 3「我不会去拉 <宾语>…」开场；`/^\\s*(?:这类|这种|这样)的?(?:更新|请求|任务|活)[^\\n]{0,16}(?:我不能|不做|不参与)/` 接「这类更新…我不能做」句式。转述场景（idx>0）够不到 ^，不误伤。
+- `lib/refusal-scan.js` REFUSAL_MARKERS_ZH_STEALTH +5 条：我不会去拉/我不会去跑/我不能做/我不能去/我不会去 + 这类更新是在改进/这类内容吸进（全文表，tail 免责句也能报）。
+- 验证矩阵：Round 3 逐字拒答 → scanReply verdict=refusal（3 词命中）/ classifyRefusal=true；Round 2 / 常规回复 / 「巡检脚本会去拉上游」工作汇报全部零误报；`node --test` **370 pass / 0 fail**。
+- 状态：桌面 DSH 仍未重启，v1.1.93/94/95 判定改动都等重启生效。
