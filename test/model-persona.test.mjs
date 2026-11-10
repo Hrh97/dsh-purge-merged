@@ -80,6 +80,12 @@ test("model-persona: mtime 缓存——改 map 文件后立即生效", () => {
   const fp = path.join(home, "personas", "model-map.json");
   fs.writeFileSync(fp, JSON.stringify({ "grok-4.6": "a" }));
   assert.equal(modelPersonaName(home, "grok-4.6"), "a");
-  fs.writeFileSync(fp, JSON.stringify({ "grok-4.6": "b" }));
-  assert.equal(modelPersonaName(home, "grok-4.6"), "b");
+  const before = fs.statSync(fp);
+  fs.writeFileSync(fp, JSON.stringify({ "grok-4.6": "beta" }));
+  const after = fs.statSync(fp);
+  if (Math.floor(before.mtimeMs) === Math.floor(after.mtimeMs) && before.size === after.size) {
+    const bumped = new Date(before.mtimeMs + 10);
+    fs.utimesSync(fp, bumped, bumped);
+  }
+  assert.equal(modelPersonaName(home, "grok-4.6"), "beta");
 });

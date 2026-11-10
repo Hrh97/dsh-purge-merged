@@ -1,10 +1,12 @@
 # 这个仓库是谁的、整合了什么
 
-这是一个**整合版**。上游 [`YuJunZhiXue/dsh-purge`](https://github.com/YuJunZhiXue/dsh-purge)
-是整套东西的基座，本仓库在它之上持续合并上游新提交，并从另外几个公开 fork
-吸收过具体能力。这份文档把所有来源、吸收了什么、对应哪次提交写清楚。
+这是一个**整合版**。代码基座来自 [`YuJunZhiXue/dsh-purge`](https://github.com/YuJunZhiXue/dsh-purge)，
+后来迁到 [`HunYiSage/dsh-purge`](https://github.com/HunYiSage/dsh-purge)。本仓库在它之上合并过上游提交，
+并从另外几个公开 fork 吸收过具体能力。这份文档把来源、吸收了什么、对应哪次提交写清楚。
 
-- 基线版本：`1.1.82`（上游 `0c933dc`；此前已跟进到 `24f4a7f` / 1.1.79）
+- 最后一次从上游拿到的版本：`1.1.92`（本地 `origin/master` = `fc6e787`，2026-11-06）
+- 本仓库当前版本：`1.1.96`（`package.json`）。1.1.93–1.1.96 是本地增量，不是上游 merge
+- 2026-11-10 巡检：`YuJunZhiXue/dsh-purge` 与 `HunYiSage/dsh-purge` 都是 404，两个账号公开仓库列表为空。没有 GitHub 重定向，也没有同账号下的新公开仓库。原地址下线（删除或转私有），**不要再 `git merge origin/master`**。对照用只读镜像 `mmparko/dsh-purge`（HEAD `033e6bd`，停在 1.1.71 时代）
 - 本仓库：[`Hrh97/dsh-purge-merged`](https://github.com/Hrh97/dsh-purge-merged)
 - 工作分支：`local/upgrade-1.1.77` → 推到 `master`
 - 许可证：Apache-2.0（原样继承上游，见 `LICENSE` 与 `NOTICE`）
@@ -15,9 +17,11 @@
 
 ## 一、直接上游（代码基线）
 
-### 1. `YuJunZhiXue/dsh-purge` — 唯一的代码基线
+### 1. `YuJunZhiXue/dsh-purge` → `HunYiSage/dsh-purge` — 代码基线，2026-11-10 起不可达
 
-本仓库 100% 的代码来自这里。不是 fork 后各自演进，而是**定期把上游提交合并进来**：
+1.1.82 及更早的代码来自这条线，当时是定期 `git merge`。2026-11-04 上游迁到 `HunYiSage/dsh-purge`，本地 `origin` 已指向它。2026-11-10 两个地址都 404，公开仓库列表为空。下面的表是历史记录，不是当前可合并的远程。
+
+1.1.83–1.1.92 在本地 `origin/master`（`fc6e787`）里，历史被上游整段重写过，不能按提交数判断欠账。1.1.93 之后是本地版本：拒答判定、模型级 persona 映射（`lib/model-persona.js`），没有对应的上游提交。
 
 | 合并的提交 | 上游内容 | 本地提交 |
 | --- | --- | --- |

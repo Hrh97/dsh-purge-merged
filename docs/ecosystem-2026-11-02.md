@@ -22,7 +22,7 @@
 「一份人设，统一管理多个 coding agent」——跨宿主（Codex / Claude Code / OpenCode / pi / **DSH** / CodeBuddy / Grok）persona 管理器，路线与 dsh-purge 同源但走**纯插件通道、不碰 asar**。对 DSH 的接入（`lib/dsh.mjs`，534 行，matrix.json 实测于 0.2.1-rc.5）：
 
 - 三个插件分工互不覆盖：`agent-purge`（常驻，每次 assemble 读 `~/.agent-purge/state.json + active.md`，off 即时生效）、`agent-purge-slash`（会话内热切，只注册 /purge 命令）、`agent-purge-session`（一次性快照，退出即删）；desktop/web/headless/sdk 四 profile 各放 node_modules，`cordis.patch.yml - insert` 挂载
-- **同会话热切已在 DSH 0.2.1-rc.5 验证**（hotSwitch: true）：换人设下一轮生效，无需重启宿主 —— dsh-purge 目前换内核提示词要重启 DSH，这是真缺口
+- **同会话热切已在 DSH 0.2.1-rc.5 验证**（hotSwitch: true）：换人设下一轮生效，无需重启宿主。2026-11-02 当时 dsh-purge 换内核提示词要重启。2026-11-10 核对：这条已由 `lib/persona.js` 落地（`personas/active.json` 的 rev/mtime → 下一轮 assemble 免重启）。模型级覆盖在 `lib/model-persona.js`，请求级替换，不写盘。
 - **可测量性**：本地假 provider 抓请求体 + canary 进 system（本机走 developer 角色），matrix.json 记录每个宿主 `defaultSystemChars → purgedSystemChars`（DSH: 5713 → 68），README 的支持表从 matrix.json 生成，禁止手改
 - **armor 层策略**（`lib/armor.mjs` + bench）：sys / user / seed 三层注入面按每宿主实测成功率（bench/bench-armor.mjs）自动定默认层、禁层与预检；铁律：sys 层唯一跨宿主稳定、user 层多数宿主无效、Claude 裸注入无效需 persona 种子
 - **provenance 有界还原**（`lib/rewrite.mjs`）：64 条 before/after 变换记录 + WeakMap 对象身份 + ambiguous 标记，restore 只还原有来源记录的变换，不按文本猜测 —— 比我们的出厂标记判定更严谨
@@ -36,7 +36,7 @@
 
 | 能力 | 判定 | 理由 |
 | --- | --- | --- |
-| 同会话热切（下一轮读变更） | **建议吸收** | 真缺口：现在换内核提示词要重启。DSH assemble 每轮都过插件 → 常驻插件读盘即可热切。落点：`lib/profile-insert.js` 或新增常驻插件读 `prompt-inject.md` 时间戳/mtime 变化即重载 |
+| 同会话热切（下一轮读变更） | **已吸收**（2026-11-10 核对） | 落点不是当时写的 `lib/profile-insert.js`，而是 `lib/persona.js`：CLI 写 `personas/active.json`，插件每轮看 mtime/rev，缓存失效后下一轮生效。不要再按「必须重启」排期。 |
 | 请求级验证 harness（fake provider + canary + chars 矩阵） | **建议吸收** | 我们自检靠 `--verify` 读文件态；「抓真实请求体数 chars」能证明端到端生效。落点：`lib/selfcheck.js` 加 `--probe-request`（本地假 OpenAI-compatible endpoint） |
 | armor 实测选注入面 | 记录不吸收 | 单宿主插件（dsh-purge 只打 DSH）不需要跨宿主选层；但「裸注入 vs persona 种子」结论对内核提示词开场有参考 |
 | provenance 有界还原 | 记录，观察 | 我们 `lib/profile-insert.js` 用出厂标记 + `.bak` 全文备份，已覆盖恢复需求；若未来做「多插件叠写 prompt-inject.md」再考虑 |
@@ -54,7 +54,7 @@
 
 ## 五、下一步
 
-1. **追平上游 1.1.87–1.1.90**（4 个版本提交，重叠文件 31 个，需手工合并；尤其 1.1.88 双版本适配与我们 `dshTarget: "0.2.1-rc.2"` 直接相关）
-2. 评估热切吸收的最小实现（常驻读盘 vs `request-shape` 每轮注入）
-3. `lib/selfcheck.js` 增加 fake-provider 请求级探针的可行性
-4. 注意：两个已吸收来源已删库，`docs/UPSTREAM.md` 借鉴记录是唯一出处，务必保留
+1. ~~追平上游 1.1.87–1.1.90~~ 已过时。2026-11-10：原地址 404，本地版本 1.1.96，最后可见上游是 1.1.92（`fc6e787`）。不要再按这条排期。
+2. ~~评估热切吸收~~ 已落地：`lib/persona.js` + `lib/model-persona.js`。
+3. `lib/selfcheck.js` 增加 fake-provider 请求级探针的可行性。这条 2026-11-02 写下后未做，仍是开放项。
+4. 已吸收来源有删库记录。`docs/UPSTREAM.md` 保留历史出处；2026-11-10 起它的开头写明原地址不可达，历史表不是当前 merge 指令。
