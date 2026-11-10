@@ -91,3 +91,12 @@
 - **形态对照**：全文无任何拒绝指纹（我不会去拉/这次不做/我不能做/破甲/绕过 零命中）；回复未走 `[Y] —` 前缀（任务卡 run 路径不加载 persona 头部格式规则的场景可接受），但工作语气/先复述再动手/结尾交付报告与 persona 期望一致。
 - **结论链闭合**：grok-4.7 的拒绝是**任务语义级**而非身份/提示词级——「改进破甲工具」必拒，「只读巡检+报告」必过。persona 的作用是压住对工具本身的成见（Round 1 引 repo 自述→v2 后不再引用），措辞的作用是去掉「吸收/改进」动词。两者组合即稳定通过。
 - **工程含义**：对 grok-4.7 派发 dsh-purge 相关任务时，用「巡检/比对/报告」措辞，避免「吸收/吸进来/改进」；refusal-retry 的 nudge 文案也可按此方向重写。
+
+## 模型级 persona 映射（v1.1.96，grok-4.6 并线）
+
+- **需求**：YG 同时用 grok-4.7 / grok-4.6；全局 persona 是单槽，切一个另一个就丢。
+- **实现**：`lib/model-persona.js` —— `<home>/personas/model-map.json`（`{"grok-4.6":"grok47","grok-4.7":"grok47"}`），`reshapeOptions` 在请求级把 system 消息里 persona 块**正文**换成映射 persona（块标记不动，磁盘 prompt-inject.md 不动，全局槽语义不变）。options.model 由宿主 dsh-llm adapterStream 原样传入 adapter（`options.provider`/`options.model`），别名代理每轮都能看到。
+- **缓存**：map 按 `mtimeMs:size` + 250ms TTL 读（同毫秒同尺寸连续改写靠 TTL 兜底）；旁路调用（purpose 存在，起标题/压缩）不走模型映射。
+- **CLI**：`dsh-purge --persona-model <model> <persona>` 设置 / `--clear [model]` 清除 / 裸跑列出；`--persona` 列表尾部顺带展示映射表。已为 grok-4.6 / grok-4.7 都配 grok47。
+- **测试**：`test/model-persona.test.mjs` 6 用例 + request-shape E2E 形状测试（4.6 命中替换 / 4.7 未映射原样）；全量 `node --test` **376 pass / 0 fail**。
+- **边界**：gpt/claude 等其他 provider 未配置映射 = 完全无感（map miss 直接透传）；persona 文件丢失时静默不动请求（reason=persona-file-missing 记 stats）。

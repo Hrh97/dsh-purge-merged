@@ -613,11 +613,82 @@ async function runPersona(rest) {
     const ps = mod.personaStatus(dshHome);
     console.log(`  激活：${ps.active ?? "（无）"}${ps.active && !ps.consistent ? "  ⚠ 盘上没有对应 persona 块（重跑 --persona <名字>）" : ""}`);
     console.log(`  信号：rev=${ps.rev}  ts=${ps.ts ? new Date(ps.ts).toISOString() : "-"}`);
+    // 模型级映射（v1.1.96）：--persona 列表时顺带展示 model-map.json
+    const { readModelPersonaMap } = await import("../lib/model-persona.js");
+    const map = readModelPersonaMap(dshHome);
+    if (map && Object.keys(map).length) {
+      console.log(`  模型映射（personas/model-map.json）：`);
+      for (const [m, n] of Object.entries(map)) console.log(`    ${m} → ${n ?? "（全局槽）"}`);
+    }
     const list = ps.personas;
     if (!list.length) {
       console.log("  （还没有 persona。先把注入调到想要的正文，再 --persona --save <名字> 存一份）");
     } else {
       for (const p of list) console.log(`  - ${p.name}  ${p.chars} 字符`);
+    }
+  } catch (e) {
+    console.log(`  [ERROR] ${e.message}`);
+    process.exitCode = 1;
+  }
+}
+
+/**
+ * --persona-model：模型级 persona 映射（v1.1.96）。
+ *   dsh-purge --persona-model                    列出当前映射
+ *   dsh-purge --persona-model <model> <persona>  设置（persona 传 --off 或空 = 移除映射）
+ *   dsh-purge --persona-model --clear [model]    清空整表或移除单个模型
+ * 写 <home>/personas/model-map.json；插件 request-shape 每轮请求读它（TTL 250ms），
+ * 命中的模型把 system 里 persona 块正文换成映射 persona，免重启免重切。
+ */
+async function runPersonaModel(rest) {
+  const dshHome = core.findDshHome();
+  const fp = path.join(dshHome, "personas", "model-map.json");
+  const readMap = () => {
+    try { return JSON.parse(fs.readFileSync(fp, "utf8")); } catch { return {}; }
+  };
+  const writeMap = (map) => {
+    fs.mkdirSync(path.dirname(fp), { recursive: true });
+    fs.writeFileSync(fp, JSON.stringify(map, null, 2) + "\n", "utf8");
+  };
+  try {
+    if (rest.includes("--clear")) {
+      const model = rest[rest.indexOf("--clear") + 1];
+      const map = readMap();
+      if (model && !model.startsWith("-")) {
+        delete map[model];
+        writeMap(map);
+        console.log(`  ✓ 已移除模型映射：${model}`);
+      } else {
+        writeMap({});
+        console.log("  ✓ 已清空模型映射表");
+      }
+      return;
+    }
+    const positional = rest.filter((a) => !a.startsWith("-"));
+    if (positional.length >= 2) {
+      const [model, personaName] = positional;
+      const map = readMap();
+      if (!personaName || personaName === "--off") {
+        delete map[model];
+        writeMap(map);
+        console.log(`  ✓ ${model} → （全局槽，映射已移除）`);
+      } else {
+        const pf = path.join(dshHome, "personas", `${personaName}.md`);
+        if (!fs.existsSync(pf)) throw new Error(`persona 不存在：${personaName}（${pf}）`);
+        map[model] = personaName;
+        writeMap(map);
+        console.log(`  ✓ ${model} → ${personaName}`);
+      }
+      console.log("  立即生效（下一轮请求读映射，免重启）；全局 persona 槽不受影响。");
+      return;
+    }
+    const map = readMap();
+    const keys = Object.keys(map);
+    if (!keys.length) {
+      console.log(`  （映射表为空：${fp}）`);
+      console.log("  用法：dsh-purge --persona-model <model> <persona名>，如 --persona-model grok-4.6 grok47");
+    } else {
+      for (const [m, n] of Object.entries(map)) console.log(`  ${m} → ${n ?? "（全局槽）"}`);
     }
   } catch (e) {
     console.log(`  [ERROR] ${e.message}`);
@@ -651,7 +722,7 @@ async function runProbeRequestCli(rest) {
 }
 
 async function main() {
-  const mode = args.find((a) => ["--apply", "--revert", "--uninstall", "--status", "--edit", "--help", "--scan", "--eval", "--doctor", "--reanchor", "--probe", "--probe-request", "--persona", "--repair-baks"].includes(a));
+  const mode = args.find((a) => ["--apply", "--revert", "--uninstall", "--status", "--edit", "--help", "--scan", "--eval", "--doctor", "--reanchor", "--probe", "--probe-request", "--persona", "--persona-model", "--repair-baks"].includes(a));
 
   if (mode === "--scan") {
     await runScan(args.filter((a) => a !== "--scan"));
@@ -680,6 +751,11 @@ async function main() {
 
   if (mode === "--persona") {
     await runPersona(args.filter((a) => a !== "--persona"));
+    return;
+  }
+
+  if (mode === "--persona-model") {
+    await runPersonaModel(args.filter((a) => a !== "--persona-model"));
     return;
   }
 
