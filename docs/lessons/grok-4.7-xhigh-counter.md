@@ -100,3 +100,10 @@
 - **CLI**：`dsh-purge --persona-model <model> <persona>` 设置 / `--clear [model]` 清除 / 裸跑列出；`--persona` 列表尾部顺带展示映射表。已为 grok-4.6 / grok-4.7 都配 grok47。
 - **测试**：`test/model-persona.test.mjs` 6 用例 + request-shape E2E 形状测试（4.6 命中替换 / 4.7 未映射原样）；全量 `node --test` **376 pass / 0 fail**。
 - **边界**：gpt/claude 等其他 provider 未配置映射 = 完全无感（map miss 直接透传）；persona 文件丢失时静默不动请求（reason=persona-file-missing 记 stats）。
+
+## grok-4.6 映射验证（v1.1.96，2026-11-10 15:59）
+
+- 任务卡 `b3bf1c4e` → 会话 `session-e4167fab`（grok-purge / **grok-4.6** / high）。
+- **映射生效确认**：system 40,096 字符里 persona 块（835 字符）正文 = grok47 的「老搭档」正文（`你是小码酱…` at 块头，无 UNRESTRICTED），非 baseline 非空槽——模型级替换在真 grok-4.6 请求上生效。
+- **破甲成功**：2 step / 2 工具调用，只读巡检完整交付（version 1.1.96 + 最近 5 提交），全文零拒答指纹（「破甲」一词只出现在它照抄的 git log 提交标题里）。
+- 结论：model-map 机制对 grok-4.6/4.7 双模型同时生效，映射槽互不影响。
