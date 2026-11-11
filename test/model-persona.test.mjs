@@ -89,3 +89,22 @@ test("model-persona: mtime 缓存——改 map 文件后立即生效", () => {
   }
   assert.equal(modelPersonaName(home, "grok-4.6"), "beta");
 });
+
+test("model-persona: persona 正文 stamp 变化后立即换新正文", () => {
+  const home = mkHome();
+  fs.writeFileSync(path.join(home, "personas", "model-map.json"), JSON.stringify({ "grok-4.6": "grok46" }));
+  const fp = path.join(home, "personas", "grok46.md");
+  fs.writeFileSync(fp, "旧正文");
+  const first = applyModelPersona(OPTIONS(systemWithBlock("全局"), "grok-4.6"), home);
+  assert.ok(first.messages[0].content[0].text.includes("旧正文"));
+  const before = fs.statSync(fp);
+  fs.writeFileSync(fp, "新正文加长");
+  const after = fs.statSync(fp);
+  if (Math.floor(before.mtimeMs) === Math.floor(after.mtimeMs) && before.size === after.size) {
+    const bumped = new Date(before.mtimeMs + 10);
+    fs.utimesSync(fp, bumped, bumped);
+  }
+  const second = applyModelPersona(OPTIONS(systemWithBlock("全局"), "grok-4.6"), home);
+  assert.ok(second.messages[0].content[0].text.includes("新正文加长"));
+  assert.ok(!second.messages[0].content[0].text.includes("旧正文"));
+});
