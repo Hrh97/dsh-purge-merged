@@ -1,3 +1,15 @@
+# 1.2.2
+
+## 中文
+
+- 版本 **1.2.2**。
+- **修「网络抖动 = 分支不存在」误判**：`remoteHeadSha()` 原来只并发打 `api.github.com/commits/<ref>` 与 `commits/<ref>.atom` 两个源，两个都超时就返回空串，`listRemoteVersions()` 因此漏掉那条 lane，面板显示「还没有测试版」、切通道直接失败。本机到这两个域名都是间歇可达，实测同一个 `checkUpdate()` 连跑三次会随机空一次。现在单个源失败先重试一次，仍失败则回落到该 ref 上一次成功读到的 sha（内存 + `~/.dsh/dsh-purge/head-cache.json` 持久化），实测连跑四次 stable/beta 的 sha 与版本号全部稳定。
+
+## English
+
+- **1.2.2**.
+- **Fixed a false "the branch does not exist" verdict on network jitter**: `remoteHeadSha()` used to fire `api.github.com/commits/<ref>` and `commits/<ref>.atom` concurrently and return an empty string when both timed out, so `listRemoteVersions()` dropped that lane and the panel reported "no beta yet" while switching channels failed outright. Both domains are only intermittently reachable from this machine — three back-to-back `checkUpdate()` calls returned an empty sha for stable or beta once at random. Each source now retries once, and when both still fail the last known-good sha for that ref is used (in memory plus `~/.dsh/dsh-purge/head-cache.json`). Four consecutive runs now report a stable sha and version for both lanes.
+
 # 1.2.1
 
 ## 中文
@@ -6,7 +18,6 @@
 - **测试通道（beta）恢复可用**：更新源迁到 fork 之后，`beta` 分支不存在，`checkUpdate()` 的 `lanes.beta.hasRemote` 恒为 false，切到测试通道直接返回「还没有测试版」。现已按 master 头建回 `beta` 分支（`cf0c0be`），两条 lane 都有远端，`hasBeta: true`。
 - **CI 覆盖 beta 分支**：`.github/workflows/ci.yml` 的 push 触发原来只有 `master` 与 `local/**`，推到 `beta` 的代码不跑任何断言。现加入 `beta`，测试通道与正式通道共用同一套检查。
 - **新增更新通道单测** `test/update-channel.test.mjs`（6 条）：`versionIsNewer` 的三级比较与预发布语义（`1.2.0-beta.1 < 1.2.0`）、`normalizeChannel` 只认 beta、`safeUpdateRef` 拒绝 `beta/../master` 一类路径穿越形态、`hideListedVersion` 保留 beta 分支头但隐藏历史 beta/rc 标签与已撤回的 1.1.11-beta 系。此前这些函数没有任何断言。
-- **修「网络抖动 = 分支不存在」误判**：`remoteHeadSha()` 原来只并发打 `api.github.com/commits/<ref>` 与 `commits/<ref>.atom` 两个源，两个都超时就返回空串，`listRemoteVersions()` 因此漏掉那条 lane，面板显示「还没有测试版」、切通道直接失败。本机到这两个域名都是间歇可达，实测同一个 `checkUpdate()` 连跑三次会随机空一次。现在单个源失败先重试一次，仍失败则回落到该 ref 上一次成功读到的 sha（内存 + `~/.dsh/dsh-purge/head-cache.json` 持久化），实测连跑四次 stable/beta 的 sha 与版本号全部稳定。
 - `docs/UPSTREAM.md` 补分支布局说明。
 
 ## English
