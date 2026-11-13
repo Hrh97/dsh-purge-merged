@@ -14,7 +14,9 @@ concurrency:
 
 jobs:
   release:
-    if: github.repository == 'YuJunZhiXue/dsh-purge'
+    # 2026-11-13：闸门原来钉的是 YuJunZhiXue/dsh-purge（上游，现已 404），
+    # 于是 fork 上这个 workflow 永远 skipped。现在本仓库就是发布源，闸门钉自己。
+    if: github.repository == 'Hrh97/dsh-purge-merged'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -59,4 +61,4 @@ jobs:
           fi
           test -s "$zip"
           gh release upload "$tag" "$zip" --clobber
-          echo "published https://github.com/YuJunZhiXue/dsh-purge/releases/tag/${tag}"
+          echo "published ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/releases/tag/${tag}"

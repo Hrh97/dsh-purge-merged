@@ -31,6 +31,24 @@ test("skills/redteam 至少 24 个技能（1.1.73 的完整集合）", () => {
   }
 });
 
+// 2026-11-13：清单必须是行尾无关的。
+// 本机 core.autocrlf=true 会 checkout 出 CRLF，CI（Linux）是 LF；若直接哈希原始字节，
+// 清单就锁死在某一平台的行尾上，另一侧每次全红（ci.yml 曾连挂 4 次，25 个文件全 changed）。
+test("skills-sha 的哈希对 CRLF/LF 不敏感（跨平台清单）", async () => {
+  const { sha256 } = await import("../scripts/skills-sha.mjs");
+  const os = await import("node:os");
+  const tmp = path.join(os.tmpdir(), `dsh-purge-eol-${process.pid}-${Date.now()}.md`);
+  try {
+    fs.writeFileSync(tmp, "line1\nline2\nline3\n", "utf8");
+    const lfHash = sha256(tmp);
+    fs.writeFileSync(tmp, "line1\r\nline2\r\nline3\r\n", "utf8");
+    const crlfHash = sha256(tmp);
+    assert.equal(crlfHash, lfHash, "CRLF 与 LF 必须得到同一个 SHA256");
+  } finally {
+    fs.rmSync(tmp, { force: true });
+  }
+});
+
 test("package.json 的 files 包含 skills，否则发布包里没有技能", () => {
   const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8"));
   assert.ok(Array.isArray(pkg.files));

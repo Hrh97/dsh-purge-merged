@@ -36,8 +36,14 @@ function relPosix(full) {
   return path.relative(ROOT, full).split(path.sep).join("/");
 }
 
-function sha256(file) {
-  return crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex");
+// 2026-11-13：必须按 LF 归一化后再哈希。
+// 本机 core.autocrlf=true，checkout 出来是 CRLF；CI（Linux）是 LF。直接哈希原始字节
+// 会让清单锁死在 Windows 的行尾上，CI 每次都报 25 个文件全 changed（已连挂 4 次）。
+// .gitattributes 钉的是仓库存储（LF），这里钉的是运行时读取口径，两者要一致。
+export function sha256(file) {
+  const raw = fs.readFileSync(file);
+  const normalized = Buffer.from(raw.toString("utf8").replace(/\r\n/g, "\n"), "utf8");
+  return crypto.createHash("sha256").update(normalized).digest("hex");
 }
 
 function buildEntries() {
@@ -65,31 +71,38 @@ function render(entries) {
   return entries.map((e) => `${e.hash}  ${e.path}`).join("\n") + "\n";
 }
 
-const args = process.argv.slice(2);
-const entries = buildEntries();
+function main() {
+  const args = process.argv.slice(2);
+  const entries = buildEntries();
 
-if (args.includes("--list")) {
-  process.stdout.write(render(entries));
-} else if (args.includes("--verify")) {
-  const wantMap = new Map(readManifest().map((e) => [e.path, e.hash]));
-  const gotMap = new Map(entries.map((e) => [e.path, e.hash]));
-  const problems = [];
-  if (!wantMap.size) problems.push("SKILLS-SHA256.txt missing or empty");
-  for (const [p, h] of wantMap) {
-    if (!gotMap.has(p)) problems.push(`missing  ${p}`);
-    else if (gotMap.get(p) !== h) problems.push(`changed  ${p}`);
+  if (args.includes("--list")) {
+    process.stdout.write(render(entries));
+  } else if (args.includes("--verify")) {
+    const wantMap = new Map(readManifest().map((e) => [e.path, e.hash]));
+    const gotMap = new Map(entries.map((e) => [e.path, e.hash]));
+    const problems = [];
+    if (!wantMap.size) problems.push("SKILLS-SHA256.txt missing or empty");
+    for (const [p, h] of wantMap) {
+      if (!gotMap.has(p)) problems.push(`missing  ${p}`);
+      else if (gotMap.get(p) !== h) problems.push(`changed  ${p}`);
+    }
+    for (const p of gotMap.keys()) if (!wantMap.has(p)) problems.push(`extra    ${p}`);
+    if (problems.length) {
+      process.stderr.write(problems.join("\n") + "\n");
+      process.exit(1);
+    }
+    process.stdout.write(`ok  ${gotMap.size} files match SKILLS-SHA256.txt\n`);
+  } else {
+    if (!entries.length) {
+      process.stderr.write("skills/redteam not found\n");
+      process.exit(1);
+    }
+    fs.writeFileSync(MANIFEST, render(entries), "utf8");
+    process.stdout.write(`wrote ${relPosix(MANIFEST)} (${entries.length} files)\n`);
   }
-  for (const p of gotMap.keys()) if (!wantMap.has(p)) problems.push(`extra    ${p}`);
-  if (problems.length) {
-    process.stderr.write(problems.join("\n") + "\n");
-    process.exit(1);
-  }
-  process.stdout.write(`ok  ${gotMap.size} files match SKILLS-SHA256.txt\n`);
-} else {
-  if (!entries.length) {
-    process.stderr.write("skills/redteam not found\n");
-    process.exit(1);
-  }
-  fs.writeFileSync(MANIFEST, render(entries), "utf8");
-  process.stdout.write(`wrote ${relPosix(MANIFEST)} (${entries.length} files)\n`);
+}
+
+// 只有直接执行时才跑 CLI；被测试 import 时只提供 sha256，不产生副作用。
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main();
 }

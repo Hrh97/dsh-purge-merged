@@ -1,3 +1,19 @@
+# 1.2.0
+
+## 中文
+
+- 版本 **1.2.0**。
+- **更新源迁到本仓库**：上游 `HunYiSage/dsh-purge` 与 `YuJunZhiXue/dsh-purge` 两个地址现在都返回 404，插件内「检查更新」和安装命令全部失效。更新源统一改为 `Hrh97/dsh-purge-merged`（`lib/update.js`、`lib/redteam/ui.js` 兜底、`package.json` 的 repository/homepage/bugs/`dsh.install` 共七处、`client.js` 两处欢迎语、三份 README 的 codeload 命令）。`dshPurgeFork.of` 保留 `HunYiSage` 作为血统记录。
+- **CI 连挂四轮的根因**：`scripts/skills-sha.mjs` 直接哈希磁盘原始字节，而本机 `core.autocrlf=true` checkout 出 CRLF、CI（Linux）是 LF，清单被锁死在 Windows 行尾上，Linux 侧 25 个技能文件全报 `changed`。现在哈希前统一做 CRLF→LF 归一化（`.gitattributes` 钉的是仓库存储，这里钉运行时读取口径，两者对齐），并新增回归测试 `skills-sha 的哈希对 CRLF/LF 不敏感` 防止再退化。
+- **Release workflow 复活**：`.github/workflows/release.yml` 的 `if: github.repository == 'YuJunZhiXue/dsh-purge'` 钉的是已消失的上游，fork 上永远 skipped；改为钉本仓库，发布链接改用 `${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}`，不再硬编码旧仓库名。
+
+## English
+
+- **1.2.0**.
+- **Update source moved to this repository**: both `HunYiSage/dsh-purge` and `YuJunZhiXue/dsh-purge` now return 404, so the in-plugin "check for updates" and every install command were dead. The source is now `Hrh97/dsh-purge-merged` (`lib/update.js`, the `lib/redteam/ui.js` fallback, seven fields in `package.json` — repository/homepage/bugs/`dsh.install` — two `client.js` welcome strings, and the codeload commands in all three READMEs). `dshPurgeFork.of` keeps `HunYiSage` as lineage.
+- **Why CI failed four runs in a row**: `scripts/skills-sha.mjs` hashed raw on-disk bytes, but this machine runs `core.autocrlf=true` (CRLF checkout) while CI is LF, so the manifest was pinned to Windows line endings and Linux reported all 25 skill files as `changed`. Hashing now normalizes CRLF to LF first (`.gitattributes` pins repository storage; this pins the runtime read path, and the two now agree), with a regression test `skills-sha hashes are CRLF/LF insensitive` guarding it.
+- **Release workflow revived**: `if: github.repository == 'YuJunZhiXue/dsh-purge'` pointed at the vanished upstream, so the fork always skipped it; the gate now names this repository and the published URL uses `${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}` instead of a hardcoded old name.
+
 # 1.1.91
 
 ## 中文
