@@ -14,6 +14,7 @@ import assert from "node:assert/strict";
 import {
   hideListedVersion,
   normalizeChannel,
+  resolveHeadSha,
   safeUpdateRef,
   versionIsNewer,
 } from "../lib/update.js";
@@ -53,6 +54,20 @@ test("safeUpdateRef：只放行 master / beta / 版本号 / 提交号", () => {
   for (const bad of ["", "  ", "beta/../master", "../../etc/passwd", "master;rm -rf /", "refs/heads/beta"]) {
     assert.equal(safeUpdateRef(bad), "", `应拒绝 ${JSON.stringify(bad)}`);
   }
+});
+
+// 2026-11-13：网络抖动不能把 lane 判成「分支不存在」。
+// api.github.com / github.com 在本机都是间歇可达，remoteHeadSha 两个源同时空过一次，
+// listRemoteVersions 就漏掉那条 lane，面板显示「还没有测试版」，切通道直接失败。
+test("resolveHeadSha：api 优先、atom 兜底、都空时回落到上次成功的 sha", () => {
+  const full = "a".repeat(40);
+  const cached = "b".repeat(40);
+  assert.equal(resolveHeadSha(full, "", cached), full);
+  assert.equal(resolveHeadSha("", full, cached), full);
+  assert.equal(resolveHeadSha(full, cached, cached), full);
+  assert.equal(resolveHeadSha("", "", cached), cached, "两个源都空时必须回落到缓存");
+  assert.equal(resolveHeadSha("", "", ""), "", "没有缓存时返回空串");
+  assert.equal(resolveHeadSha(undefined, undefined, undefined), "");
 });
 
 test("hideListedVersion：beta 分支头保留，历史 beta 标签隐藏", () => {
