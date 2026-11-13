@@ -1,3 +1,21 @@
+# 1.2.1
+
+## 中文
+
+- 版本 **1.2.1**。
+- **测试通道（beta）恢复可用**：更新源迁到 fork 之后，`beta` 分支不存在，`checkUpdate()` 的 `lanes.beta.hasRemote` 恒为 false，切到测试通道直接返回「还没有测试版」。现已按 master 头建回 `beta` 分支（`cf0c0be`），两条 lane 都有远端，`hasBeta: true`。
+- **CI 覆盖 beta 分支**：`.github/workflows/ci.yml` 的 push 触发原来只有 `master` 与 `local/**`，推到 `beta` 的代码不跑任何断言。现加入 `beta`，测试通道与正式通道共用同一套检查。
+- **新增更新通道单测** `test/update-channel.test.mjs`（6 条）：`versionIsNewer` 的三级比较与预发布语义（`1.2.0-beta.1 < 1.2.0`）、`normalizeChannel` 只认 beta、`safeUpdateRef` 拒绝 `beta/../master` 一类路径穿越形态、`hideListedVersion` 保留 beta 分支头但隐藏历史 beta/rc 标签与已撤回的 1.1.11-beta 系。此前这些函数没有任何断言。
+- `docs/UPSTREAM.md` 补分支布局说明。
+
+## English
+
+- **1.2.1**.
+- **The beta lane works again**: after the update source moved to the fork, the `beta` branch did not exist, so `checkUpdate()` reported `lanes.beta.hasRemote: false` and switching to the test channel returned "no beta yet". The branch is back at the master head (`cf0c0be`), both lanes now have a remote, and `hasBeta` is true.
+- **CI now covers beta**: the push trigger in `.github/workflows/ci.yml` only listed `master` and `local/**`, so code pushed to `beta` ran no assertions at all. `beta` is now included, and the test channel shares the same checks as the stable one.
+- **New update-channel unit tests** `test/update-channel.test.mjs` (6 cases): the three-level `versionIsNewer` comparison and its prerelease semantics (`1.2.0-beta.1 < 1.2.0`), `normalizeChannel` accepting only beta, `safeUpdateRef` rejecting traversal shapes like `beta/../master`, and `hideListedVersion` keeping the beta branch head while hiding historical beta/rc tags and the withdrawn 1.1.11-beta line. None of these functions had any assertion before.
+- `docs/UPSTREAM.md` gained a branch-layout note.
+
 # 1.2.0
 
 ## 中文

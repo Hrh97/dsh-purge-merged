@@ -6,6 +6,9 @@ on:
   push:
     branches:
       - master
+      # 2026-11-13：beta 是测试通道分支（lib/update.js 的 BETA_REF = "beta"）。
+      # 推上去也要跑 CI，否则测试通道的代码可以带着红灯进 beta。
+      - beta
       - "local/**"
   pull_request:
   workflow_dispatch:

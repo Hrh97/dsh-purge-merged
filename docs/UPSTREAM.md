@@ -10,6 +10,10 @@
 - 2026-11-10 巡检：`YuJunZhiXue/dsh-purge` 与 `HunYiSage/dsh-purge` 都是 404，两个账号公开仓库列表为空。没有 GitHub 重定向，也没有同账号下的新公开仓库。原地址下线（删除或转私有），**不要再 `git merge origin/master`**。对照用只读镜像 `mmparko/dsh-purge`（HEAD `033e6bd`，停在 1.1.71 时代）
 - 本仓库：[`Hrh97/dsh-purge-merged`](https://github.com/Hrh97/dsh-purge-merged)
 - 工作分支：`master`（`local/upgrade-1.1.77` 时代已结束）
+- 分支布局（2026-11-13 起）：`master` = 正式通道（`lib/update.js` 的 `STABLE_REF`），`beta` = 测试通道（`BETA_REF`）。
+  fork 建仓时没有 `beta`，`checkUpdate()` 的 `lanes.beta.hasRemote` 因此为 false、切测试通道直接报「还没有测试版」；
+  `beta` 分支已按 master 头 `cf0c0be` 建回，两条 lane 现在都有远端。`ci.yml` 的 push 触发同步加了 `beta`，
+  测试通道的代码也要过同一套断言。测试通道只认 `beta` 分支头，历史 `v*-beta.*` / `v*-rc.*` 标签不列（`hideListedVersion` 契约）。
 - 许可证：Apache-2.0（原样继承上游，见 `LICENSE` 与 `NOTICE`）
 
 上游 `NOTICE` 要求保留署名，本仓库完整保留，没有改动原作者信息。
