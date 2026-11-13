@@ -187,10 +187,10 @@ Have `dsh` on PATH? One command, one restart, one click. Run the line for the ho
 
 ```sh
 # Official `dsh web`
-dsh plugin --profile web add https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/master
+dsh plugin --profile web add https://codeload.github.com/Hrh97/dsh-purge-merged/tar.gz/refs/heads/master
 
 # Official desktop EXE
-dsh plugin --profile desktop add https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/master
+dsh plugin --profile desktop add https://codeload.github.com/Hrh97/dsh-purge-merged/tar.gz/refs/heads/master
 ```
 
 1. **Fully quit and reopen** the host you installed into. Web: stop `dsh web` and start it again. Desktop: quit the tray icon too, then open the exe.
@@ -215,14 +215,14 @@ pnpm only (no `dsh` required): run this inside the profile you actually use, not
 
 ```sh
 cd "$DSH_HOME/profiles/web"    # desktop: profiles/desktop
-pnpm add https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/master
+pnpm add https://codeload.github.com/Hrh97/dsh-purge-merged/tar.gz/refs/heads/master
 ```
 
 Windows PowerShell:
 
 ```powershell
 cd "$env:USERPROFILE\.dsh\profiles\web"   # desktop: profiles\desktop
-pnpm add https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/master
+pnpm add https://codeload.github.com/Hrh97/dsh-purge-merged/tar.gz/refs/heads/master
 ```
 
 `pnpm add` and `dsh plugin add` fetch the package; `postinstall` writes `dsh-purge` into `dsh.profile.bundles` and adds a body `insert` in the profile `cordis.patch.yml`. Without that insert the host never loads the plugin and no button appears.
@@ -232,9 +232,9 @@ pnpm add https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/mas
 - pnpm 11/12 skips install scripts (`ERR_PNPM_IGNORED_BUILDS`) unless you allow the build:
 
 ```sh
-pnpm add --allow-build=dsh-purge --allow-build=dsh-purge@https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/master https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/master
+pnpm add --allow-build=dsh-purge --allow-build=dsh-purge@https://codeload.github.com/Hrh97/dsh-purge-merged/tar.gz/refs/heads/master https://codeload.github.com/Hrh97/dsh-purge-merged/tar.gz/refs/heads/master
 # Already installed, warning only — the full specifier is required (name-only leaves "set this to true or false"):
-pnpm approve-builds dsh-purge@https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/master
+pnpm approve-builds dsh-purge@https://codeload.github.com/Hrh97/dsh-purge-merged/tar.gz/refs/heads/master
 # If bundles / insert are still missing:
 node node_modules/dsh-purge/scripts/ensure-profile-bundle.mjs
 ```
@@ -243,7 +243,7 @@ node node_modules/dsh-purge/scripts/ensure-profile-bundle.mjs
 - On the desktop client you can also click the button (`dsh://` deep link; it still downloads the same tarball).
 
 <p align="center">
-  <a href="dsh://plugin/install?id=dsh-purge&name=dsh-purge&version=1.1.82&repo=YuJunZhiXue%2Fdsh-purge&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E6%9C%AC%E6%9C%BA%E8%A1%A5%E4%B8%81%2C%E8%AE%BE%E7%BD%AE%E9%A1%B5&downloadUrl=https%3A%2F%2Fcodeload.github.com%2FYuJunZhiXue%2Fdsh-purge%2Ftar.gz%2Frefs%2Fheads%2Fmaster"><strong>Install in desktop client</strong></a>
+  <a href="dsh://plugin/install?id=dsh-purge&name=dsh-purge&version=1.1.82&repo=Hrh97%2Fdsh-purge-merged&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E6%9C%AC%E6%9C%BA%E8%A1%A5%E4%B8%81%2C%E8%AE%BE%E7%BD%AE%E9%A1%B5&downloadUrl=https%3A%2F%2Fcodeload.github.com%2FHrh97%2Fdsh-purge-merged%2Ftar.gz%2Frefs%2Fheads%2Fmaster"><strong>Install in desktop client</strong></a>
 </p>
 
 **Step 3 — Restart the host.** Adding the plugin to a profile does **not** patch `@deepseek-ai` by itself. Fully quit and reopen the host you just installed into (Web: stop `dsh web` and start again; Desktop: quit the tray icon too, then open the exe).
@@ -261,7 +261,7 @@ node node_modules/dsh-purge/scripts/ensure-profile-bundle.mjs
 
 ```sh
 dsh plugin --profile desktop remove dsh-purge
-dsh plugin --profile desktop add https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/master
+dsh plugin --profile desktop add https://codeload.github.com/Hrh97/dsh-purge-merged/tar.gz/refs/heads/master
 ```
 
 pnpm only:
@@ -269,7 +269,7 @@ pnpm only:
 ```sh
 cd "$DSH_HOME/profiles/desktop"
 pnpm remove dsh-purge
-pnpm add https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/master
+pnpm add https://codeload.github.com/Hrh97/dsh-purge-merged/tar.gz/refs/heads/master
 ```
 
 Swap `desktop` for `web` on Web.
@@ -290,13 +290,13 @@ Install the DeepSeek Harness plugin `dsh-purge` into the Web profile only. Do no
 If `dsh` is on PATH:
 
 ```sh
-dsh plugin --profile web add https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/master
+dsh plugin --profile web add https://codeload.github.com/Hrh97/dsh-purge-merged/tar.gz/refs/heads/master
 ```
 
 If `dsh` is missing and pnpm is available, `cd` into `$DSH_HOME/profiles/web` (often `~/.dsh/profiles/web`) and run:
 
 ```sh
-pnpm add https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/master
+pnpm add https://codeload.github.com/Hrh97/dsh-purge-merged/tar.gz/refs/heads/master
 ```
 
 If this directory is already a clone and `dsh` exists, use `dsh plugin --profile web add .`. If neither `dsh` nor pnpm is available, tell the user and stop.
@@ -683,7 +683,7 @@ The author's personal channel: [t.me/LLM_PoJia](https://t.me/LLM_PoJia). Notes a
 - Scope is rendered copy, defaults, and runtime logic inside local `@deepseek-ai/*` packages, plus override files and rule sets under the harness home.
 - After an upgrade, unmatched originals show as skipped. Apply still completes, and those files are left unchanged.
 - Third-party plugin *source repos* outside `@deepseek-ai` are left alone (CMD silence may **best-effort** patch installed doctor / market / liangshen / mnemon at runtime).
-- Install from the GitHub tarball (the name is not on npm; skip the plugin market). With `dsh`: `dsh plugin --profile web add https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/master`. pnpm only: `pnpm add` that URL inside `$DSH_HOME/profiles/web`. Use `desktop` for the EXE. From this repo, `add .`.
+- Install from the GitHub tarball (the name is not on npm; skip the plugin market). With `dsh`: `dsh plugin --profile web add https://codeload.github.com/Hrh97/dsh-purge-merged/tar.gz/refs/heads/master`. pnpm only: `pnpm add` that URL inside `$DSH_HOME/profiles/web`. Use `desktop` for the EXE. From this repo, `add .`.
 
 ---
 

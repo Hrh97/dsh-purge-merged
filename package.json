@@ -1,6 +1,6 @@
 {
   "name": "dsh-purge",
-  "version": "1.1.99",
+  "version": "1.2.0",
   "description": "DeepSeek Harness 破甲：让所有模型都能破甲，不同模型可换不同提示词；默认提示词面向国模「小码酱」。Jailbreak for every model — swap prompts per model. 求 Star 收藏 ⭐ 如要二开，请查看署名要求部分",
   "type": "module",
   "main": "lib/index.js",
@@ -65,14 +65,14 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/YuJunZhiXue/dsh-purge.git"
+    "url": "git+https://github.com/Hrh97/dsh-purge-merged.git"
   },
-  "homepage": "https://github.com/YuJunZhiXue/dsh-purge#readme",
+  "homepage": "https://github.com/Hrh97/dsh-purge-merged#readme",
   "bugs": {
-    "url": "https://github.com/YuJunZhiXue/dsh-purge/issues"
+    "url": "https://github.com/Hrh97/dsh-purge-merged/issues"
   },
   "dshPurgeFork": {
-    "of": "YuJunZhiXue/dsh-purge",
+    "of": "HunYiSage/dsh-purge",
     "repo": "Hrh97/dsh-purge-merged",
     "edition": "merged",
     "note": "整合版：代码基线是上游，另吸收了 JeffKeeping / evilevil / luowang-ui / dsh-purge-flash 的能力。见 docs/UPSTREAM.md"
@@ -94,9 +94,9 @@
     },
     "install": {
       "preferred": "tarball",
-      "tarball": "https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/master",
-      "zip": "https://codeload.github.com/YuJunZhiXue/dsh-purge/zip/refs/heads/master",
-      "git": "https://github.com/YuJunZhiXue/dsh-purge.git"
+      "tarball": "https://codeload.github.com/Hrh97/dsh-purge-merged/tar.gz/refs/heads/master",
+      "zip": "https://codeload.github.com/Hrh97/dsh-purge-merged/zip/refs/heads/master",
+      "git": "https://github.com/Hrh97/dsh-purge-merged.git"
     }
   },
   "publishConfig": {

@@ -4,11 +4,12 @@
 后来迁到 [`HunYiSage/dsh-purge`](https://github.com/HunYiSage/dsh-purge)。本仓库在它之上合并过上游提交，
 并从另外几个公开 fork 吸收过具体能力。这份文档把来源、吸收了什么、对应哪次提交写清楚。
 
-- 最后一次从上游拿到的版本：`1.1.92`（本地 `origin/master` = `fc6e787`，2026-11-06）
-- 本仓库当前版本：`1.1.96`（`package.json`）。1.1.93–1.1.96 是本地增量，不是上游 merge
+- 最后一次从上游拿到的版本：`1.1.92`（`upstream-archive/master` = `fc6e787`，2026-11-06）
+- 本仓库当前版本：`1.2.0`（`package.json`）。1.1.93–1.2.0 是本地增量，不是上游 merge
+- 2026-11-13：`origin` 已从死掉的 `HunYiSage/dsh-purge` 换成 [`Hrh97/dsh-purge-merged`](https://github.com/Hrh97/dsh-purge-merged)（SSH）；旧地址降级为 `upstream-archive`，只剩本地缓存 ref。插件内置更新检查（`lib/update.js` 的 `REPO`、`lib/redteam/ui.js` 的兜底仓库名、`package.json` 的 `dsh.install`、README 的 codeload 命令）全部改指 fork —— 此前指向的两个上游地址都是 404，更新通道实际上是断的
 - 2026-11-10 巡检：`YuJunZhiXue/dsh-purge` 与 `HunYiSage/dsh-purge` 都是 404，两个账号公开仓库列表为空。没有 GitHub 重定向，也没有同账号下的新公开仓库。原地址下线（删除或转私有），**不要再 `git merge origin/master`**。对照用只读镜像 `mmparko/dsh-purge`（HEAD `033e6bd`，停在 1.1.71 时代）
 - 本仓库：[`Hrh97/dsh-purge-merged`](https://github.com/Hrh97/dsh-purge-merged)
-- 工作分支：`local/upgrade-1.1.77` → 推到 `master`
+- 工作分支：`master`（`local/upgrade-1.1.77` 时代已结束）
 - 许可证：Apache-2.0（原样继承上游，见 `LICENSE` 与 `NOTICE`）
 
 上游 `NOTICE` 要求保留署名，本仓库完整保留，没有改动原作者信息。

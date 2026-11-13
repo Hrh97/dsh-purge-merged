@@ -15,8 +15,10 @@ import {
   INSERT_BLOCK,
 } from "../lib/profile-insert.js";
 
-const MASTER_URL = "https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/master";
-const COMMIT_URL = "https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/abc1234567890";
+// 2026-11-13：更新源仓库已迁到 fork Hrh97/dsh-purge-merged，fixture 跟着改，
+// 免得测试里留一个已经 404 的地址误导下一个人。
+const MASTER_URL = "https://codeload.github.com/Hrh97/dsh-purge-merged/tar.gz/refs/heads/master";
+const COMMIT_URL = "https://codeload.github.com/Hrh97/dsh-purge-merged/tar.gz/abc1234567890";
 
 function withTempProfile(lockText, pkgManager) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "dsh-purge-test-"));

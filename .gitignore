@@ -1,5 +1,9 @@
 # 不上传
 node_modules/
+# 2026-11-13：git 在 https 仓库上走 askpass 时，MSYS 会把提示写成 Windows 保留设备名 CON，
+# 于是每次 fetch 失败都在仓库根留下一个垃圾文件。别让它进 status。
+CON
+con
 *.tgz
 npm-debug.log*
 *.log
