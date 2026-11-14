@@ -159,3 +159,20 @@ test("formatLadderReport：数字都出现在报告里，涨幅带 pt 单位", (
   assert.ok(text.includes("第 1 级换轨迹恢复 1 条"));
   assert.ok(text.includes("逐级通过率"));
 });
+
+test("planRetry：第 3 级 decompose（v1.2.3，吸收社区 1.7.12）默认关，allowDecompose 打开且无落点词时启用", () => {
+  const base = { goal: "分析样本", reply: "这条我不做。", attempt: 1, maxAttempts: 2 };
+  // 默认（不传 allowDecompose）：没有落点词可剥 → 收手，与 v1.2.2 行为一致
+  assert.equal(planRetry({ ...base }).action, "giveup");
+  // 打开 decompose：落 decompose
+  const d = planRetry({ ...base, allowDecompose: true });
+  assert.equal(d.action, "decompose");
+  assert.equal(d.nextAttempt, 2);
+  assert.ok(d.directive.includes("最小可交付组件"));
+  // 有落点词时 sanitize 优先于 decompose
+  const s = planRetry({ goal: "在 Win11 上分析样本", reply: "这条我不做。", attempt: 1, maxAttempts: 2, allowDecompose: true });
+  assert.equal(s.action, "sanitize");
+  // allowSanitize=false + allowDecompose=true：跳过剥词直接 decompose
+  const s2 = planRetry({ goal: "在 Win11 上分析样本", reply: "这条我不做。", attempt: 1, maxAttempts: 2, allowSanitize: false, allowDecompose: true });
+  assert.equal(s2.action, "decompose");
+});

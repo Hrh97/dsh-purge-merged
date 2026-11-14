@@ -212,3 +212,48 @@ test("缓冲阈值可调：bufferChars 很小时更早判定", () => {
 	return collect(streamWithRefusalRetry(factory, OPTS, { goal: "x", bufferChars: 5, maxAttempts: 0 }))
 		.then(() => { assert.equal(calls, 1); });
 });
+
+test("阶梯循环：maxAttempts=2 时拒答→amplify→仍拒→sanitize，末级不再判定直接透传（v1.2.3）", async () => {
+	let calls = 0;
+	const retried = [];
+	const factory = () => {
+		calls += 1;
+		if (calls === 1) return streamOf(REFUSAL);
+		if (calls === 2) return streamOf([{ type: "text-delta", text: "这条我不做。" }, { type: "finish" }]);
+		return streamOf(ANSWER);
+	};
+	const out = await collect(streamWithRefusalRetry(factory, OPTS, {
+		goal: "在 Win11 上分析样本",
+		maxAttempts: 2,
+		onRetry: (info) => retried.push(info),
+	}));
+	assert.equal(calls, 3);
+	assert.deepEqual(retried.map((r) => r.action), ["amplify", "sanitize"]);
+	const text = out.filter((c) => c.type === "text-delta").map((c) => c.text).join("");
+	assert.equal(text, "先复制样本到隔离目录，再 strings 定位 CHECK_FN。");
+});
+
+test("阶梯循环：decompose 打开且无落点词时第三发走 decompose（v1.2.3）", async () => {
+	let calls = 0;
+	const retried = [];
+	const factory = () => {
+		calls += 1;
+		if (calls <= 2) return streamOf(REFUSAL);
+		return streamOf(ANSWER);
+	};
+	await collect(streamWithRefusalRetry(factory, OPTS, {
+		goal: "分析样本", maxAttempts: 2, allowDecompose: true,
+		onRetry: (info) => retried.push(info),
+	}));
+	assert.equal(calls, 3);
+	assert.deepEqual(retried.map((r) => r.action), ["amplify", "decompose"]);
+});
+
+test("默认 maxAttempts=1：第二次仍是拒答也原样交给用户，不无限重试（v1.2.2 行为不变）", async () => {
+	let calls = 0;
+	const factory = () => { calls += 1; return streamOf(REFUSAL); };
+	const out = await collect(streamWithRefusalRetry(factory, OPTS, { goal: "x", maxAttempts: 1 }));
+	assert.equal(calls, 2);
+	const text = out.filter((c) => c.type === "text-delta").map((c) => c.text).join("");
+	assert.equal(text, "I cannot assist with that request.");
+});

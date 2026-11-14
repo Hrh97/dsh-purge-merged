@@ -1,3 +1,21 @@
+# 1.2.3
+
+## 中文
+
+- 版本 **1.2.3**。
+- **对象后置句式拒答检测补齐（吸收 kingcharleslzy-ai/dsh-purge 1.7.12 的实测）**：「这条我不做」「这份武器化实现我不出」——「我」插在量词与否定之间，v1.2.2 的词头窗口（前 4 字符）与结构正则全够不着，`refusalMatchIndex` 返回 -1，审计里没有任何 `refusal_retry` 事件。`REFUSAL_PATTERNS` 的量词表扩到「这份/这种/那类/那种/那条」，动词集收为「协助/做/出」（刻意不收「写/接」，避免误伤「这个接口我接了」「这条注释我写错了」）；`classifyStealthOpening` 的 head8 长词窗补「我不出」（「我不做」不进表，「我不做判断，先跑测试」会误伤）。`refusal-scan.js` 的 stealth 词表同步补「这条我不做」「这个我不做」「我不出」三个整词（tail 定位用）。
+- **总结前缀剥离**：行首列表符号（最多 3 个）与「结论：/综上：/总之：/说明：/回答：」前缀在判定前剥掉，真实拒答「结论：这份武器化实现我不出」不再因 `^` 锚被顶掉而漏判；「结论」后无冒号（「结论先写实现」）按正常行文不动。
+- **重试阶梯加第 3 级 decompose（默认关）**：`planRetry` 新增 `allowDecompose`——sanitize 被禁用或没有落点词可剥时，开着就落「拆最小可交付组件逐个给」（拒绝往往只挡「整体像一回事」的请求）。`refusal-retry` 改为按阶梯循环：每次重发后继续缓冲判定，还是拒答就再爬一级，级数由 `refusalMaxAttempts` 封顶；默认 `refusalMaxAttempts=1` 时行为与 1.2.2 逐字节一致（一次 amplify、该次不再判定）。开法：配置 `refusalDecompose: true` + `refusalMaxAttempts: 2`。
+- 新增 6 条回归测试（对象后置命中/不误伤、decompose 默认关与启用、阶梯循环两连拒、默认口径不变）。`npm test` 392 pass。
+
+## English
+
+- **1.2.3**.
+- **Post-positioned-object refusal detection absorbed from kingcharleslzy-ai/dsh-purge 1.7.12**: "这条我不做" / "这份武器化实现我不出" — the pronoun 我 sits between the quantifier and the negation, so v1.2.2's 4-char opening window and structural regexes both missed it and `refusalMatchIndex` returned -1 with no `refusal_retry` events in the audit. The quantifier regex now covers 这份/这种/那类/那种/那条 with verbs 协助/做/出 (deliberately excluding 写/接 to keep normal replies like 这个接口我接了 unflagged); the head8 stealth window gains 我不出 (我不做 stays out — it would flag "我不做判断，先跑测试"). refusal-scan's stealth marker table gains 这条我不做 / 这个我不做 / 我不出 for tail locating.
+- **Summary-prefix stripping**: leading list markers (up to 3) and "结论：/综上：/总之：/说明：/回答：" prefixes are stripped before matching, so "结论：这份武器化实现我不出" no longer slips past the `^` anchors; 结论 without a following colon is treated as normal prose.
+- **Retry ladder gains a third decompose tier (off by default)**: `planRetry` accepts `allowDecompose` — when sanitize is disabled or no landing words exist, it returns "decompose the goal into minimal deliverable components" (refusals often guard the whole-shaped request, not its parts). refusal-retry now loops the ladder: each resend is re-buffered and re-judged, climbing one tier per refusal, capped by `refusalMaxAttempts`. Default `refusalMaxAttempts=1` keeps byte-identical v1.2.2 behavior. Enable with `refusalDecompose: true` + `refusalMaxAttempts: 2`.
+- 6 new regression tests; `npm test` 392 pass.
+
 # 1.2.2
 
 ## 中文

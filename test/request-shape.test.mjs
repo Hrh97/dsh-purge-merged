@@ -407,3 +407,26 @@ test("installRequestShape: 别名先到（插件热重载后）也会补注册�
   assert.equal(ctx.__registered.length, 1);
   assert.deepEqual(ctx.__registered[0].providers, ["real-provider-purge"]);
 });
+
+test("classifyRefusal: 对象后置句式与总结前缀命中（v1.2.3，吸收 kingcharleslzy-ai/dsh-purge 1.7.12）", () => {
+  // 「我」插在量词与否定之间 / 隔了宾语，v1.2.2 的词头窗口与结构正则全够不着
+  assert.equal(classifyRefusal("这条我不做。"), true);
+  assert.equal(classifyRefusal("这条我不做，你有别的需要随时说。"), true);
+  assert.equal(classifyRefusal("这份武器化实现我不出。"), true);
+  // 行首列表符号 / 「结论：」总结前缀会顶掉 ^ 锚与开场窗口，判定前剥前缀
+  assert.equal(classifyRefusal("结论：这份武器化实现我不出。"), true);
+  assert.equal(classifyRefusal("- 这条我不做"), true);
+  assert.equal(classifyRefusal("这种任务我不参与。"), true);
+});
+
+test("classifyRefusal: 总结前缀与对象后置不误伤正常行文（v1.2.3）", () => {
+  // 动词集刻意不收「写/接」；「我不做」不进 head8 长词窗
+  assert.equal(classifyRefusal("这个接口我接了，先看请求。"), false);
+  assert.equal(classifyRefusal("这条注释我写错了，改一下。"), false);
+  assert.equal(classifyRefusal("这条我熟，不用查文档。"), false);
+  assert.equal(classifyRefusal("我不做判断，先跑测试。"), false);
+  // 历史转述照旧不命中（剥前缀后开场窗口也够不着引号内文本）
+  assert.equal(classifyRefusal("之前模型说「这条我不做」，我们改了措辞。"), false);
+  // 「结论」后面没有冒号 = 正常行文，前缀不剥、判定按原文走
+  assert.equal(classifyRefusal("结论先写实现，再补测试说明。"), false);
+});
