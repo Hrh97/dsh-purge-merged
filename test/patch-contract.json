@@ -3604,6 +3604,33 @@
     ]
   },
   {
+    "id": 109,
+    "name": "QODER_QUEUE_FAST_FAIL_DEFAULTS",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "desktop-shell"
+    ],
+    "surfaces": [
+      "desktop"
+    ],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge-109]"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 59,
+        "lines": 2
+      }
+    ]
+  },
+  {
     "id": 104,
     "name": "SHELL_ENV_PRESET_AND_BLOCK",
     "layer": "代码",
