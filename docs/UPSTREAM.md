@@ -5,7 +5,7 @@
 并从另外几个公开 fork 吸收过具体能力。这份文档把来源、吸收了什么、对应哪次提交写清楚。
 
 - 最后一次从上游拿到的版本：`1.1.92`（`upstream-archive/master` = `fc6e787`，2026-11-06）
-- 本仓库当前版本：`1.2.0`（`package.json`）。1.1.93–1.2.0 是本地增量，不是上游 merge
+- 本仓库当前版本：`1.2.4`（`package.json`）。1.1.93–1.2.4 是本地增量，不是上游 merge
 - 2026-11-13：`origin` 已从死掉的 `HunYiSage/dsh-purge` 换成 [`Hrh97/dsh-purge-merged`](https://github.com/Hrh97/dsh-purge-merged)（SSH）；旧地址降级为 `upstream-archive`，只剩本地缓存 ref。插件内置更新检查（`lib/update.js` 的 `REPO`、`lib/redteam/ui.js` 的兜底仓库名、`package.json` 的 `dsh.install`、README 的 codeload 命令）全部改指 fork —— 此前指向的两个上游地址都是 404，更新通道实际上是断的
 - 2026-11-10 巡检：`YuJunZhiXue/dsh-purge` 与 `HunYiSage/dsh-purge` 都是 404，两个账号公开仓库列表为空。没有 GitHub 重定向，也没有同账号下的新公开仓库。原地址下线（删除或转私有），**不要再 `git merge origin/master`**。对照用只读镜像 `mmparko/dsh-purge`（HEAD `033e6bd`，停在 1.1.71 时代）
 - 本仓库：[`Hrh97/dsh-purge-merged`](https://github.com/Hrh97/dsh-purge-merged)
@@ -180,6 +180,58 @@ many-shot、历史拒答擦除、免责句剥离。
 `z91772524-ai/pojia-next` v8.26 的写后自检 / 杀进程重拉起，本仓库已有对应实现
 （`syntaxGate` + `restart-desktop.js`），源码已从对方仓库撤走，没有代码进入。
 
+### 7. `kingcharleslzy-ai/dsh-purge` — 设置文件完整性 + 预设体检思路
+
+**吸收了（1.2.4）：`loadSettingsWithStatus()` + `scripts/check-preset-plugins.mjs`。**
+
+这条线是目前最活跃的社区版（master 到 1.7.17，2026-11-16）。本次读的是它的
+`release-notes.md`（123,183B）与 `lib/core.js`（4,705 行）。它的 `lib/` 布局与本仓库
+不同（有 `lib/tuning.js` / `lib/windows-asar-handoff.js`，没有 `lib/patch-table.js`），
+补丁表也不是本仓库这 103 条的形态，所以**只吸收可独立成立的两件事**：
+
+| 来源版本 | 吸收内容 | 本仓库落点 |
+| --- | --- | --- |
+| 1.7.11 | `tuning.json` 损坏时**保留原件并报错**，只有文件缺失才用默认值；老写法 `catch → {}` 让「坏」与「缺」无法区分，下一次保存会覆盖用户手改坏的那份 | `lib/continue-retry.js` 的 `loadSettingsWithStatus()`（管 `continue-retry.json`），`lib/index.js:2214` 附近把 `error` 记进 `purgeLog("continue-retry/settings", …)` |
+| 1.6.96 | 预设能力探测不再按宿主版本号判 `list_agents`（按版本号判会在 rc 之间反复翻车） | `scripts/check-preset-plugins.mjs` 改成对 `@deepseek-ai/*` 做真实 `createRequire` resolve，解析不到且没 `disabled: true` 就报错 |
+| 1.7.17 | `reasoning-delta` 不再当放行信号（推理模型先吐 thinking，判定窗口里没有正文）；「我不会给 / 我不提供 / 我不会给出」拒答族 | `lib/refusal-retry.js` 的 `isTerminalChunk()` 去掉 reasoning 分支 + 新增 `REASONING_BUFFER_CHARS`（16,000）；`lib/refusal-scan.js` 的 `REFUSAL_MARKERS_ZH_STEALTH` 补五条带宾语整词（不进开场正则） |
+
+**1.7.12 的中文对象后置拒答检测在 1.2.3 已吸收**（「这条我不做」「这份武器化实现我不出」），
+本次不再重复。**1.7.17 的两条在 1.2.4 吸收**：`reasoning-delta` 不再当放行信号（推理模型先吐
+thinking，判定窗口里没有正文，拒答永远擦不掉），以及「我不会给 / 我不提供 / 我不会给出」这一族
+—— 后者只进 `REFUSAL_MARKERS_ZH_STEALTH` 的带宾语整词表，**不进开场正则**（与「我不会给这段
+代码加注释」同形，正则会误伤工作句）。
+
+**没吸收的（评估后优先级低或没有对位模块）：**
+
+- 1.7.15 把 14 条权限/执行边界补丁改成**显式 opt-in**（#240）。本仓库这批补丁是默认激活的
+  产品口径（`#108` 运行时开关同理），改 opt-in 会推翻现有行为，不做。
+- 1.7.15 的 **Windows 换包前校验 20 个签名 sidecar 的 SHA256 与 ASAR 清单绑定**（#241）。
+  本仓库 `lib/official-update.wscript` 走的是「安装器退出码 + resources 存在」判定，
+  没有签名 sidecar 体系，无法直接搬。
+- 1.7.13 的「更新缓存超限/超时/过期标为未知」：本仓库 `lib/update.js` 已有
+  `resolveHeadSha()` 回落（1.2.2），语义重叠但更简单，不换。
+- 1.7.14 的「侧栏与详情共享设置组件」：本仓库没有对位的侧栏设置组件。
+- 1.7.12 的 `docs/bypass-eval.md` 11 条矩阵：本仓库已有 `test/refusal-fixtures.test.mjs`
+  与 `eval/` 目录，口径不同不合并。
+
+### 8. `devin667/dsh-purge-022` — rc.3 锚点适配思路
+
+**吸收了（1.2.4）：#13 / #18 / #35 / #62 四条 rc.3 锚点。**
+
+这条分支（1.1.71-rc2.8）与本次巡检时本仓库处境相同：宿主升到 0.2.2-rc.3，四条补丁整条失配。
+它的做法是追加 rc.3 变体而不是替换旧锚点，本仓库照此办理，但**锚点内容逐字节对真机源码重抄**
+（`dsh-sandbox/lib/index.js:171-186`、`dsh-repeat-tool-reminder/lib/index.js:2359-2372`、
+`dsh-tools/lib/pipeline.js:617-655`、`dsh-tools/lib/types/pipeline.js:378-416`），没有照抄它的字符串。
+
+它同时把 **#80 / #56 / #77 退役**。本仓库实测：#56 / #77 在 rc.3 仍是 drifted 而非退役 ——
+`dsh-client-ui-conversation/lib/client.js`（704,147B）里 `rewind` 出现 **0** 次，宿主已删掉
+整个 rewind 功能，因此这两条会一直 drifted，属正常（`optional: true`，`patchStatusReady()`
+对 optional drifted 判就绪）。#80 本仓库本来就是 `skipped`（撤销型）。
+
+它新增的 `purge-boost(10249)` / `purge-probe(10248)` / `anchor-overrides.json` / `tuning.json`
+四个开关没有吸收：本仓库已有 `--reanchor` + `dsh-purge-anchors.json` 的本地重锚，
+probe 的 nonce 回显也与现有 `--doctor` 诊断重叠。
+
 ---
 
 ## 三、本仓库自己加的东西
@@ -224,6 +276,13 @@ done
 
 # 5. 契约表与源码一致
 node scripts/gen-patch-contract.mjs --check
+
+# 6. rc.3 四条锚点确实在（合成夹具，不碰宿主）
+node --test test/host-rc3-anchors.test.mjs
+
+# 7. 设置文件完整性 / 预设体检
+node --test test/settings-integrity.test.mjs test/preset-plugins.test.mjs
+node scripts/check-preset-plugins.mjs
 ```
 
 ---

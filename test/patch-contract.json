@@ -673,6 +673,11 @@
         "kind": "string",
         "chars": 469,
         "lines": 3
+      },
+      {
+        "kind": "string",
+        "chars": 628,
+        "lines": 3
       }
     ]
   },
@@ -830,6 +835,11 @@
         "kind": "string",
         "chars": 634,
         "lines": 18
+      },
+      {
+        "kind": "string",
+        "chars": 454,
+        "lines": 13
       }
     ]
   },
@@ -1495,6 +1505,11 @@
         "kind": "string",
         "chars": 503,
         "lines": 7
+      },
+      {
+        "kind": "string",
+        "chars": 692,
+        "lines": 9
       }
     ]
   },
@@ -2854,6 +2869,36 @@
       {
         "kind": "string",
         "chars": 256,
+        "lines": 5
+      },
+      {
+        "kind": "string",
+        "chars": 194,
+        "lines": 4
+      },
+      {
+        "kind": "string",
+        "chars": 209,
+        "lines": 4
+      },
+      {
+        "kind": "string",
+        "chars": 197,
+        "lines": 4
+      },
+      {
+        "kind": "string",
+        "chars": 264,
+        "lines": 6
+      },
+      {
+        "kind": "string",
+        "chars": 279,
+        "lines": 6
+      },
+      {
+        "kind": "string",
+        "chars": 268,
         "lines": 5
       }
     ]

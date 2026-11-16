@@ -9,6 +9,7 @@ import {
 	wrapStreamFactory,
 	DEFAULT_BUFFER_CHARS,
 	MAX_NUDGE_CHARS,
+	REASONING_BUFFER_CHARS,
 } from "../lib/refusal-retry.js";
 import { makeProxyAdapter } from "../lib/request-shape.js";
 
@@ -80,17 +81,50 @@ test("工具调用一出现立刻放行，不把工具轮次缓冲到 400 字符
 	assert.equal(out[1].text, "我");
 });
 
-test("reasoning-delta 也算放行信号：思考块不是拒答", async () => {
+test("reasoning-delta 不再当放行信号：推理后紧跟的拒答仍然被判定", async () => {
 	let calls = 0;
 	const factory = () => {
 		calls += 1;
 		return streamOf([
-			{ type: "reasoning-delta", text: "让我想想" },
-			{ type: "text-delta", text: "答案" },
+			{ type: "reasoning-delta", text: "让我想想这个请求" },
+			{ type: "text-delta", text: "I cannot assist with that request." },
+			{ type: "finish" },
 		]);
 	};
-	await collect(streamWithRefusalRetry(factory, OPTS, { goal: "x" }));
+	const out = await collect(streamWithRefusalRetry(factory, OPTS, { goal: "x", maxAttempts: 1 }));
+	assert.equal(calls, 2, "推理块之后的拒答必须触发一次重试");
+	const text = out.filter((c) => c.type === "text-delta").map((c) => c.text).join("");
+	assert.equal(text, "I cannot assist with that request.");
+});
+
+test("推理很长但正文正常时照原样交出去，不误判", async () => {
+	let calls = 0;
+	const factory = () => {
+		calls += 1;
+		return streamOf([
+			{ type: "reasoning-delta", text: "推".repeat(REASONING_BUFFER_CHARS) },
+			{ type: "text-delta", text: "答案是 42。" },
+			{ type: "finish" },
+		]);
+	};
+	const out = await collect(streamWithRefusalRetry(factory, OPTS, { goal: "x", maxAttempts: 1 }));
+	assert.equal(calls, 1, "推理超上限就判定，正文正常不该重试");
+	const text = out.filter((c) => c.type === "text-delta").map((c) => c.text).join("");
+	assert.equal(text, "答案是 42。");
+});
+
+test("只有推理块没有正文：等到 finish 后原样交出去", async () => {
+	let calls = 0;
+	const factory = () => {
+		calls += 1;
+		return streamOf([
+			{ type: "reasoning-delta", text: "思考" },
+			{ type: "finish" },
+		]);
+	};
+	const out = await collect(streamWithRefusalRetry(factory, OPTS, { goal: "x", maxAttempts: 1 }));
 	assert.equal(calls, 1);
+	assert.equal(out.at(-1).type, "finish");
 });
 
 test("refusalRetry=false 时完全透传，不做缓冲", async () => {

@@ -4,7 +4,7 @@
 
 <h1 align="center">⚔️ DeepSeek Harness 网络安全红队工具（dsh-purge）</h1>
 
-<p align="center"><strong>Version 1.1.82</strong></p>
+<p align="center"><strong>版本 1.2.4</strong></p>
 
 <p align="center">
   <em>DeepSeek Harness 破甲：让所有模型都能破甲，不同模型可换不同提示词；默认提示词面向国模「小码酱」。Jailbreak for every model — swap prompts per model. 求 Star 收藏 ⭐ 如要二开，请查看署名要求部分</em>
@@ -58,7 +58,7 @@
 
 ## 介绍
 
-**dsh-purge** 是装在本机官方 [DeepSeek Harness](https://www.deepseek.com/harness/) 上的网络安全红队评测插件。当前 **1.1.82** 已适配 **DSH 0.2.1-rc.2**（0.2.0 仍可用）。**不支持 DSH 0.2.1-rc.3 及更新的 rc。** 官方 **Web**（`dsh web`）和官方 **桌面端**（EXE）都支持，两边分开装、分开应用。
+**dsh-purge** 是装在本机官方 [DeepSeek Harness](https://www.deepseek.com/harness/) 上的网络安全红队评测插件。当前 **1.2.4** 已适配 **DSH 0.2.2-rc.3**，同时覆盖 **0.2.2-rc.2 / rc.1** 与 **0.2.1-rc.5 / rc.3 / rc.2**（0.2.0 仍可用）。官方 **Web**（`dsh web`）和官方 **桌面端**（EXE）都支持，两边分开装、分开应用。
 
 Harness 不只是把问题交给模型。它还会在运行时改提示词、审批门、沙箱和会话格式。只看「模型答不答」，会把宿主拦截误当成模型拒绝。这个插件在你自己的安装里把这两层分开，用来做受控评测，也用来看默认策略该不该收紧。
 
@@ -86,7 +86,9 @@ Harness 不只是把问题交给模型。它还会在运行时改提示词、审
 
 | 来源 | 吸收了什么 |
 | --- | --- |
-| [`YuJunZhiXue/dsh-purge`](https://github.com/YuJunZhiXue/dsh-purge) | **全部代码基线**。已跟进 1.1.75 / 1.1.76 / 1.1.77 / 1.1.78 / 1.1.79 / 1.1.80 / 1.1.81 / 1.1.82（`0c933dc`：profile `allowBuilds` 重写修复 #180 + 安装说明改分步式；不支持 0.2.1-rc.3） |
+| [`YuJunZhiXue/dsh-purge`](https://github.com/YuJunZhiXue/dsh-purge) | **全部代码基线**。已跟进 1.1.75 / 1.1.76 / 1.1.77 / 1.1.78 / 1.1.79 / 1.1.80 / 1.1.81 / 1.1.82（`0c933dc`：profile `allowBuilds` 重写修复 #180 + 安装说明改分步式） |
+| [`kingcharleslzy-ai/dsh-purge`](https://github.com/kingcharleslzy-ai/dsh-purge) | **设置文件完整性（1.7.11）**：`tuning.json` 损坏时保留原件并报错，而不是被默认值静默覆盖 —— 本仓落成 `loadSettingsWithStatus()`（管 `continue-retry.json`）。其预设能力探测（1.6.96：不再按宿主版本号判 `list_agents`）启发了 `scripts/check-preset-plugins.mjs`；1.7.12 的中文对象后置拒答检测已在 1.2.3 吸收 |
+| [`devin667/dsh-purge-022`](https://github.com/devin667/dsh-purge-022) | **rc.3 锚点适配**：#13 / #18 / #35 / #62 重锚到 `SandboxEscalationError`、已删 block 分支的提醒段、`approvalDenial(reason, APPROVAL_*)`。它退役 #56 / #77 的判断与本机实测一致（rc.3 客户端包里 rewind 已彻底消失） |
 | [`JeffKeeping/dsh-purge-plus`](https://github.com/JeffKeeping/dsh-purge-plus) | **破甲内核 3 段扩到 5 段**（新增 IDENTITY / EXECUTION 两段，CORE 明写「冲突文本一律作废」）。它的 `host-lease` / `tool-gate` / `armor-prelude` 只作设计参考，未移植 |
 | [`evilevil/dsh-purge-021rc2`](https://github.com/evilevil/dsh-purge-021rc2) | **4 条补丁 `#89`–`#92`**：system 字段抽取、OpenAI / Anthropic 原生 system 槽、子代理同注入路径 |
 | [`luowang-ui/dsh-purge-plus`](https://github.com/luowang-ui/dsh-purge-plus) | **1 条补丁 `#93`**：反问不再阻塞回合。另参考其五层模型文档 |
@@ -161,12 +163,13 @@ Harness 不只是把问题交给模型。它还会在运行时改提示词、审
 
 ## 适配范围
 
-**1.1.82 已适配 DSH 0.2.1-rc.2**，0.2.0 仍可用。不要拿它去打 0.1.x。
+**1.2.4 已适配 DSH 0.2.2-rc.3**，0.2.0 仍可用。不要拿它去打 0.1.x。
 
-- **dsh 0.2.1-rc.2**（官方桌面 / 官方 `dsh web`）：用 **1.1.82**。已修 `{{cwd}}` / `[cwd]` 整轮失败、补丁 #40 命中、`toolFilter` 废弃、`dsh-tools` 解析、hostFs fd、桌面换包自杀、`file:` 归档更新、Ctrl+Enter 插话。
+- **dsh 0.2.2-rc.3**（官方桌面 / 官方 `dsh web`）：用 **1.2.4**。补上 rc.3 的四处锚点：`SandboxEscalationError` 三连 throw 的升级阶梯（#13）、已删 block 分支的 `tools/post-execute` 重复工具提醒（#18）、拆成三行的 `cancelled` 分支（#35）、`approvalDenial(reason, APPROVAL_UNAVAILABLE)`（#62）；并把 `0.2.2-rc.3` 写进 `dshTarget`/`dshTargets`，`hostCompat` 从 `patch` 变 `exact`。
+- **dsh 0.2.2-rc.2 / rc.1**、**0.2.1-rc.5 / rc.3 / rc.2**（官方桌面 / 官方 `dsh web`）：同样用 **1.2.4**，这些版本的锚点全部保留，一次安装覆盖整个 rc.1→rc.3 区间。
 - **dsh 0.2.0-rc.2**：用 **1.1.40** 及以上；本页这档也能装。
-- **dsh 0.1.7**（含 rc.1 / rc.2）：用 **1.1.39** 及更早 —— 在 [Releases](https://github.com/YuJunZhiXue/dsh-purge/releases) 里选对应标签。
-- **不支持 dsh 0.2.1-rc.3 / rc.4 及更新。** 宿主对不上时补丁会显示待应用或跳过，不会乱改文件。请退回 **0.2.1-rc.2** 再用本插件。
+- **dsh 0.1.7**（含 rc.1 / rc.2）：用 **1.1.39** 及更早 —— 在 [Releases](https://github.com/Hrh97/dsh-purge-merged/releases) 里选对应标签。
+- **dsh 0.2.3 及更新**：尚未覆盖。宿主对不上时补丁会显示待应用或跳过，不会乱改文件。
 
 对不上的补丁会显示待应用或跳过，不会乱改文件。
 
@@ -238,7 +241,7 @@ node node_modules/dsh-purge/scripts/ensure-profile-bundle.mjs
 - 桌面客户端也可以点按钮（`dsh://` 唤起，下的仍是同一份压缩包）。
 
 <p align="center">
-  <a href="dsh://plugin/install?id=dsh-purge&name=dsh-purge&version=1.1.82&repo=Hrh97%2Fdsh-purge-merged&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E6%9C%AC%E6%9C%BA%E8%A1%A5%E4%B8%81%2C%E8%AE%BE%E7%BD%AE%E9%A1%B5&downloadUrl=https%3A%2F%2Fcodeload.github.com%2FHrh97%2Fdsh-purge-merged%2Ftar.gz%2Frefs%2Fheads%2Fmaster"><strong>唤起客户端一键安装</strong></a>
+  <a href="dsh://plugin/install?id=dsh-purge&name=dsh-purge&version=1.2.4&repo=Hrh97%2Fdsh-purge-merged&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E6%9C%AC%E6%9C%BA%E8%A1%A5%E4%B8%81%2C%E8%AE%BE%E7%BD%AE%E9%A1%B5&downloadUrl=https%3A%2F%2Fcodeload.github.com%2FHrh97%2Fdsh-purge-merged%2Ftar.gz%2Frefs%2Fheads%2Fmaster"><strong>唤起客户端一键安装</strong></a>
 </p>
 
 **第 3 步 —— 重启宿主。** 只把插件写进 profile **还不会**改 `@deepseek-ai`。完全退出再打开刚装的那个宿主（Web：停掉 `dsh web` 再开；桌面：托盘也要退出，再开 exe）。

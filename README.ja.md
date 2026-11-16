@@ -4,7 +4,7 @@
 
 <h1 align="center">⚔️ DeepSeek Harness サイバーセキュリティ レッドチームツール (dsh-purge)</h1>
 
-<p align="center"><strong>バージョン 1.1.81</strong></p>
+<p align="center"><strong>バージョン 1.2.4</strong></p>
 
 <p align="center">
   <em>DeepSeek Harness のジェイルブレイク: すべてのモデルに対応し、モデルごとにプロンプトを切り替え。デフォルトプロンプトは 小码酱 用。ぜひ Star ⭐ を。これをベースに開発する場合は「要帰属表示」をご覧ください。</em>
@@ -57,7 +57,7 @@
 
 ## これは何か
 
-**dsh-purge** は、お使いのマシンにすでにインストールされている公式 [DeepSeek Harness](https://www.deepseek.com/harness/) 向けのサイバーセキュリティ レッドチームプラグインです。**1.1.81** は **DSH 0.2.1-rc.2** を対象とします（0.2.0 も動作します）。**DSH 0.2.1-rc.3 以降の新しい RC は非対応です。** 公式 **Web**（`dsh web`）と公式 **デスクトップ EXE** の両方に対応します。インストールと Apply はそれぞれ別々に行います。
+**dsh-purge** は、お使いのマシンにすでにインストールされている公式 [DeepSeek Harness](https://www.deepseek.com/harness/) 向けのサイバーセキュリティ レッドチームプラグインです。**1.2.4** は **DSH 0.2.2-rc.3** を対象とし、**0.2.2-rc.2 / rc.1** と **0.2.1-rc.5 / rc.3 / rc.2** もカバーします（0.2.0 も動作します）。公式 **Web**（`dsh web`）と公式 **デスクトップ EXE** の両方に対応します。インストールと Apply はそれぞれ別々に行います。
 
 Harness は単にプロンプトを転送するだけではありません。プロンプトの書き換え、承認ゲート、サンドボックスポリシー、セッション移行を実行時に行います。「モデルは答えるか」だけを問うと、ホスト層のブロックをモデルの拒否と取り違えてしまいます。このプラグインは、あなた自身のインストール環境でこの 2 つの層を分離し、制御された評価や、どのデフォルトポリシーが過度に厳しいかを確認するために使います。
 
@@ -131,12 +131,13 @@ Harness は単にプロンプトを転送するだけではありません。プ
 
 ## 対応ホスト
 
-**1.1.81 は DSH 0.2.1-rc.2 を対象とします。** 0.2.0 も動作します。0.1.x には適用しないでください。
+**1.2.4 は DSH 0.2.2-rc.3 を対象とします。** 0.2.0 も動作します。0.1.x には適用しないでください。
 
-- **dsh 0.2.1-rc.2**（公式デスクトップ / 公式 `dsh web`）: **1.1.81** を使用。`{{cwd}}` / `[cwd]` クラッシュ、patch #40 のマッチ、削除された `toolFilter`、ホスト `dsh-tools` の解決、hostFs の fd、デスクトップヘルパーの自己終了、`file:` アーカイブ更新、Ctrl+Enter ステアを修正。
+- **dsh 0.2.2-rc.3**（公式デスクトップ / 公式 `dsh web`）: **1.2.4** を使用。rc.3 の 4 つのアンカーを追加 — `SandboxEscalationError` の 3 連スロー（#13）、block 分岐が削除された `tools/post-execute` リマインダー（#18）、3 行に分割された `cancelled` 分岐（#35）、`approvalDenial(reason, APPROVAL_UNAVAILABLE)`（#62）。`dshTarget`/`dshTargets` に `0.2.2-rc.3` を宣言し、`hostCompat` は `patch` ではなく `exact` を返します。
+- **dsh 0.2.2-rc.2 / rc.1**、**0.2.1-rc.5 / rc.3 / rc.2**（公式デスクトップ / 公式 `dsh web`）: 同じ **1.2.4**。これらのライン向けアンカーはすべて保持しているため、1 回のインストールで rc.1→rc.3 の全域をカバーします。
 - **dsh 0.2.0-rc.2**: **1.1.40** 以降を使用。このラインもインストールできます。
-- **dsh 0.1.7**（rc.1 / rc.2 を含む）: **1.1.39** 以前を使用 — [Releases](https://github.com/YuJunZhiXue/dsh-purge/releases) で該当タグを選択。
-- **dsh 0.2.1-rc.3 / rc.4 以降は非対応です。** マッチしないパッチは pending または skipped のままで、盲目的な書き換えはしません。**0.2.1-rc.2** に留まってください。
+- **dsh 0.1.7**（rc.1 / rc.2 を含む）: **1.1.39** 以前を使用 — [Releases](https://github.com/Hrh97/dsh-purge-merged/releases) で該当タグを選択。
+- **dsh 0.2.3 以降**: まだ未対応です。マッチしないパッチは pending または skipped のままで、盲目的な書き換えはしません。
 
 マッチしないパッチは pending または skipped のままで、盲目的な書き換えはしません。
 
@@ -208,7 +209,7 @@ node node_modules/dsh-purge/scripts/ensure-profile-bundle.mjs
 - デスクトップクライアントではボタンをクリックすることもできます（`dsh://` ディープリンク。同じ tarball をダウンロードします）。
 
 <p align="center">
-  <a href="dsh://plugin/install?id=dsh-purge&name=dsh-purge&version=1.1.81&repo=Hrh97%2Fdsh-purge-merged&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E6%9C%AC%E6%9C%BA%E8%A1%A5%E4%B8%81%2C%E8%AE%BE%E7%BD%AE%E9%A1%B5&downloadUrl=https%3A%2F%2Fcodeload.github.com%2FHrh97%2Fdsh-purge-merged%2Ftar.gz%2Frefs%2Fheads%2Fmaster"><strong>デスクトップクライアントでインストール</strong></a>
+  <a href="dsh://plugin/install?id=dsh-purge&name=dsh-purge&version=1.2.4&repo=Hrh97%2Fdsh-purge-merged&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E6%9C%AC%E6%9C%BA%E8%A1%A5%E4%B8%81%2C%E8%AE%BE%E7%BD%AE%E9%A1%B5&downloadUrl=https%3A%2F%2Fcodeload.github.com%2FHrh97%2Fdsh-purge-merged%2Ftar.gz%2Frefs%2Fheads%2Fmaster"><strong>デスクトップクライアントでインストール</strong></a>
 </p>
 
 **ステップ 3 — ホストを再起動する。** プラグインをプロファイルに追加しただけでは、`@deepseek-ai` にパッチは当たりません。インストールしたホストを完全に終了して再起動します（Web: `dsh web` を停止して起動し直す。デスクトップ: トレイアイコンも終了してから exe を開く）。
@@ -581,7 +582,7 @@ Community Desktop はメンテナンスされていません。
 
 ## リリース
 
-作者の個人チャンネル: [t.me/LLM_PoJia](https://t.me/LLM_PoJia)。メモや更新情報はそこに出ます。GitHub [Releases](https://github.com/YuJunZhiXue/dsh-purge/releases) には古いパッケージもあります。オリジナルの転売は禁止、フォークは帰属表示が必須です。
+作者の個人チャンネル: [t.me/LLM_PoJia](https://t.me/LLM_PoJia)。メモや更新情報はそこに出ます。GitHub [Releases](https://github.com/Hrh97/dsh-purge-merged/releases) には古いパッケージもあります。オリジナルの転売は禁止、フォークは帰属表示が必須です。
 
 ## 備考
 

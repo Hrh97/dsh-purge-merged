@@ -4,6 +4,9 @@ node_modules/
 # 于是每次 fetch 失败都在仓库根留下一个垃圾文件。别让它进 status。
 CON
 con
+# 2026-11-14：某次命令里 `%SystemDrive%` 没被展开，MSYS 在仓库根建了个字面量目录。
+# 里面只有一个空 ProgramData，不是仓库内容。
+%SystemDrive%/
 *.tgz
 npm-debug.log*
 *.log

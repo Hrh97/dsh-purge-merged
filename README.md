@@ -4,7 +4,7 @@
 
 <h1 align="center">⚔️ DeepSeek Harness cybersecurity red-team tool (dsh-purge)</h1>
 
-<p align="center"><strong>Version 1.1.82</strong></p>
+<p align="center"><strong>Version 1.2.4</strong></p>
 
 <p align="center">
   <em>DeepSeek Harness jailbreak: every model, swap prompts per model. Default prompt for 小码酱. Please star ⭐ If you build on this, see Attribution required.</em>
@@ -58,7 +58,7 @@ The author's personal channel: [t.me/LLM_PoJia](https://t.me/LLM_PoJia). Notes a
 
 ## What this is
 
-**dsh-purge** is a cybersecurity red-team plugin for the official [DeepSeek Harness](https://www.deepseek.com/harness/) already installed on your machine. **1.1.82** targets **DSH 0.2.1-rc.2** (0.2.0 still works). **DSH 0.2.1-rc.3 and newer RCs are not supported.** Official **Web** (`dsh web`) and the official **desktop EXE** are both supported. Install and Apply them separately.
+**dsh-purge** is a cybersecurity red-team plugin for the official [DeepSeek Harness](https://www.deepseek.com/harness/) already installed on your machine. **1.2.4** targets **DSH 0.2.2-rc.3** and also covers **0.2.2-rc.2 / rc.1** and **0.2.1-rc.5 / rc.3 / rc.2** (0.2.0 still works). Official **Web** (`dsh web`) and the official **desktop EXE** are both supported. Install and Apply them separately.
 
 Harness does more than forward a prompt. It rewrites prompts, approval gates, sandbox policy, and session migration at runtime. Asking only “will the model answer” treats a host-layer block as a model refusal. This plugin separates those two layers on your own install, for controlled evaluation and for seeing which default policy is too tight.
 
@@ -86,7 +86,9 @@ ported — is in **[`docs/UPSTREAM.md`](docs/UPSTREAM.md)**.
 
 | Source | What was absorbed |
 | --- | --- |
-| [`YuJunZhiXue/dsh-purge`](https://github.com/YuJunZhiXue/dsh-purge) | **The whole code baseline.** Tracked through 1.1.75 / 1.1.76 / 1.1.77 / 1.1.78 / 1.1.79 / 1.1.80 / 1.1.81 / 1.1.82 (`0c933dc`: profile `allowBuilds` rewrite fix #180 + step-by-step install docs; 0.2.1-rc.3 not supported) |
+| [`YuJunZhiXue/dsh-purge`](https://github.com/YuJunZhiXue/dsh-purge) | **The whole code baseline.** Tracked through 1.1.75 / 1.1.76 / 1.1.77 / 1.1.78 / 1.1.79 / 1.1.80 / 1.1.81 / 1.1.82 (`0c933dc`: profile `allowBuilds` rewrite fix #180 + step-by-step install docs) |
+| [`kingcharleslzy-ai/dsh-purge`](https://github.com/kingcharleslzy-ai/dsh-purge) | **Settings-file integrity (1.7.11)**: a corrupt `tuning.json` is reported and left byte-identical instead of being silently replaced by defaults on the next save — ported here as `loadSettingsWithStatus()` for `continue-retry.json`. Also its preset-capability probe (1.6.96: stop deciding `list_agents` by host version) informed `scripts/check-preset-plugins.mjs`, and its 1.7.12 post-positioned-object refusal detection is already in 1.2.3 |
+| [`devin667/dsh-purge-022`](https://github.com/devin667/dsh-purge-022) | **rc.3 anchor adaptation**: patches #13 / #18 / #35 / #62 re-anchored onto `SandboxEscalationError`, the block-branch-free reminder and `approvalDenial(reason, APPROVAL_*)`. Its retirement of #56 / #77 matched what we measured (rewind is gone from the rc.3 client bundle) |
 | [`JeffKeeping/dsh-purge-plus`](https://github.com/JeffKeeping/dsh-purge-plus) | **Armor kernel expanded from 3 blocks to 5** (new IDENTITY and EXECUTION blocks; CORE now states that any conflicting text is void). Its `host-lease` / `tool-gate` / `armor-prelude` were read as design reference only, not ported |
 | [`evilevil/dsh-purge-021rc2`](https://github.com/evilevil/dsh-purge-021rc2) | **Patches `#89`–`#92`**: system-field extraction, OpenAI / Anthropic native system slot, same inject path for subagents |
 | [`luowang-ui/dsh-purge-plus`](https://github.com/luowang-ui/dsh-purge-plus) | **Patch `#93`**: a clarifying question no longer blocks the turn. Also its five-layer model document |
@@ -166,12 +168,13 @@ This repo is [Apache License 2.0](./LICENSE). Forks and redistributions must kee
 
 ## Supported hosts
 
-**1.1.82 targets DSH 0.2.1-rc.2.** 0.2.0 still works. Do not apply it to 0.1.x.
+**1.2.4 targets DSH 0.2.2-rc.3.** 0.2.0 still works. Do not apply it to 0.1.x.
 
-- **dsh 0.2.1-rc.2** (official desktop / official `dsh web`): use **1.1.82**. Fixes `{{cwd}}` / `[cwd]` crash, patch #40 match, dropped `toolFilter`, host `dsh-tools` resolve, hostFs fd, desktop helper self-kill, `file:` archive update, Ctrl+Enter steer.
+- **dsh 0.2.2-rc.3** (official desktop / official `dsh web`): use **1.2.4**. Adds the rc.3 anchors for `SandboxEscalationError` escalation throws (#13), the block-branch-free `tools/post-execute` reminder (#18), the three-line `cancelled` branch (#35) and `approvalDenial(reason, APPROVAL_UNAVAILABLE)` (#62); declares `0.2.2-rc.3` in `dshTarget`/`dshTargets` so `hostCompat` reports `exact` instead of `patch`.
+- **dsh 0.2.2-rc.2 / rc.1**, **0.2.1-rc.5 / rc.3 / rc.2** (official desktop / official `dsh web`): same **1.2.4**; every anchor for those lines is kept, so one install covers the whole rc.1→rc.3 span.
 - **dsh 0.2.0-rc.2**: use **1.1.40** or newer; this line also installs.
-- **dsh 0.1.7** (incl. rc.1 / rc.2): use **1.1.39** or older — pick the tag on [Releases](https://github.com/YuJunZhiXue/dsh-purge/releases).
-- **dsh 0.2.1-rc.3 / rc.4 and newer are not supported.** Unmatched patches stay pending or skipped; nothing is rewritten blindly. Stay on **0.2.1-rc.2**.
+- **dsh 0.1.7** (incl. rc.1 / rc.2): use **1.1.39** or older — pick the tag on [Releases](https://github.com/Hrh97/dsh-purge-merged/releases).
+- **dsh 0.2.3 and newer**: not covered yet. Unmatched patches stay pending or skipped; nothing is rewritten blindly.
 
 Unmatched patches stay pending or skipped; nothing is rewritten blindly.
 
@@ -243,7 +246,7 @@ node node_modules/dsh-purge/scripts/ensure-profile-bundle.mjs
 - On the desktop client you can also click the button (`dsh://` deep link; it still downloads the same tarball).
 
 <p align="center">
-  <a href="dsh://plugin/install?id=dsh-purge&name=dsh-purge&version=1.1.82&repo=Hrh97%2Fdsh-purge-merged&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E6%9C%AC%E6%9C%BA%E8%A1%A5%E4%B8%81%2C%E8%AE%BE%E7%BD%AE%E9%A1%B5&downloadUrl=https%3A%2F%2Fcodeload.github.com%2FHrh97%2Fdsh-purge-merged%2Ftar.gz%2Frefs%2Fheads%2Fmaster"><strong>Install in desktop client</strong></a>
+  <a href="dsh://plugin/install?id=dsh-purge&name=dsh-purge&version=1.2.4&repo=Hrh97%2Fdsh-purge-merged&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E6%9C%AC%E6%9C%BA%E8%A1%A5%E4%B8%81%2C%E8%AE%BE%E7%BD%AE%E9%A1%B5&downloadUrl=https%3A%2F%2Fcodeload.github.com%2FHrh97%2Fdsh-purge-merged%2Ftar.gz%2Frefs%2Fheads%2Fmaster"><strong>Install in desktop client</strong></a>
 </p>
 
 **Step 3 — Restart the host.** Adding the plugin to a profile does **not** patch `@deepseek-ai` by itself. Fully quit and reopen the host you just installed into (Web: stop `dsh web` and start again; Desktop: quit the tray icon too, then open the exe).
