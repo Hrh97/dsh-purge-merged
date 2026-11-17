@@ -45,7 +45,7 @@ npm run qoder:verify    # 装好的 Qoder CN 里那个 prompt，是不是当前�
 | --- | --- | --- |
 | 0 | 活的 asar 与当前提示词完全一致 | 没事 |
 | 1 | 漂了（活着的是旧一代） | `node lib/qoder/qoder-purge.mjs --force` |
-| 2 | 还没打过补丁 | `node lib/qoder/qoder-purge.mjs` |
+| 2 | 还没打过补丁 | `node lib/qoder/qoder-purge.mjs --patch`（裸跑只打印 usage，不打补丁） |
 | 3 | 无法证明（备份缺失 / 备份本身已打补丁） | 先 `--restore` 或重装 Qoder |
 
 > 刻意不用「正则扫出注入的长字符串再比」。压缩后的 `electronMain.js` 里到处是长

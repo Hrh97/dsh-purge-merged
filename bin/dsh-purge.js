@@ -852,6 +852,17 @@ async function main() {
     const { patches: effectivePatches, applied, stale } = applyAnchorOverrides(core.ALL_PATCHES, overrides);
     if (applied.length) console.log(`  ✓ 锚点覆盖生效 ${applied.length} 处${stale.length ? `（另 ${stale.length} 处 stale 已丢弃）` : ""}`);
 
+    // 备份已被写成「已打态」的文件：补丁照打，但先说清还原回不到官方原文。
+    try {
+      const lost = await core.detectBaselineLost(state.ai_base);
+      if (lost.length) {
+        console.log(`  ⚠ ${lost.length} 个文件的备份是「已打态」，还原无法恢复原文 / baseline lost files: ${lost.length}`);
+        for (const e of lost.slice(0, 5)) console.log(`     · ${e.path}  (补丁 #${e.patch_ids.join(",")})`);
+        if (lost.length > 5) console.log(`     · …其余 ${lost.length - 5} 个见 --revert 明细`);
+        console.log("     处置：需从官方安装包/app.asar 取回原文件重建基线，不能靠 bak 反向恢复。");
+      }
+    } catch { /* 只读探测，失败不影响应用 */ }
+
     let multi;
     try {
       multi = await core.applyPatchesAllHosts(effectivePatches, {
@@ -915,10 +926,17 @@ async function main() {
     console.log("全部完成 / All done。重启 dsh 生效 / Restart dsh to take effect.");
   } else if (mode === "--revert") {
     if (state.ai_base || core.enumeratePatchAiBases().length) {
-      const { reverted, errors } = await core.revertAllHosts();
+      const { reverted, errors, baselineLost } = await core.revertAllHosts();
       for (const p of reverted) console.log(`  ✓ 已还原 / Reverted ${p}`);
+      for (const p of baselineLost || []) {
+        console.log(`  ⚠ 基线已丢失，未还原（文件仍是打过补丁的状态）/ baseline lost: ${p}`);
+      }
       for (const [p, e] of errors) console.log(`  ⚠ 还原失败 ${p}: ${e}`);
-      if (reverted.length === 0) console.log("  - 没有补丁备份可还原 / no patch backup");
+      if ((baselineLost || []).length) {
+        console.log("    处置 / next step：备份与本体逐字节相同，反向恢复拿不到原文；");
+        console.log("    需要从官方安装包或 app.asar 里的原始文件重建基线，再执行还原。");
+      }
+      if (reverted.length === 0 && !(baselineLost || []).length) console.log("  - 没有补丁备份可还原 / no patch backup");
     }
     if (state.shim_dir) {
       const r = await core.revertShim(state.shim_dir);

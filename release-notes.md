@@ -1,3 +1,23 @@
+# 1.2.5
+
+## 中文
+
+- 版本 **1.2.5**。
+- **修「假还原」（吸收 qiuqianyi66/dsh-purge 1.2.6）**：`.dshpurge.bak` 只在缺失时才创建，「先打补丁、后才有备份」的历史状态会把**已打态**存成基线。此时 `revertAll` 把补丁文件覆盖回它自己：不报错、0 差异、界面显示成功，用户以为退回官方原版，其实补丁全在。新增 `detectBaselineLost()`：对每个载体，若 bak 与本体逐字节相同、且本体确实带补丁痕迹（有写入痕迹的补丁 marker 命中 + 原 pattern 已不在），单列 `baseline_lost`、保留 bak 留证、不计入 reverted；只有同字节但没补丁痕迹的文件仍按 skipped，不误报。校验型/占位型补丁（无 replacements）不拿来当证据。
+- `baseline_lost` 贯通三处还原入口：CLI `--revert`、`/purge revert`、面板还原都提示「需从官方安装包/app.asar 重建基线」；`--apply` 前先跑一次只读检测，存在基线丢失文件时先告警再照常打补丁。
+- **组装失败不再丢工具 schema（吸收 ZXEB/dsh-purge v1.1.75）**：原生 `assemble` 抛异常时，若本槽还没有 `lastGood`（首次装配就失败），旧兜底返回 `{ sections:[], contexts:[], tools:[] }`，模型拿不到工具 schema 就把工具调用写成正文（DSML），表象是「模型不会调工具」。新增进程级 `RECENT_ASSEMBLY_TOOLS` 记住最近一次成功装配的工具集，失败兜底优先复用完整 `lastGood`、其次补回工具 schema、保留段落与上下文。**刻意不 `throw err`**——本地 assemble guard 的既有约定是不能让下层异常弄死整条 waterfall（否则 UI 出现「任务到一半就苏醒」）；ZXEB 的 throw 方案会破坏这条约定，故只借「不丢工具」的内核。
+- 新增 11 条回归测试（全部合成夹具，CI 无需宿主）：`test/baseline-lost.test.mjs` 6 条（判丢失、真原文不丢、未打不丢、校验型补丁不误当证据、revert 不谎报、same-bytes 无痕迹仍 skipped）、`test/assemble-guard.test.mjs` 5 条（lastGood 优先、进程 tools 补回、保留段落上下文、无工具不造假、集成首调抛错不丢 schema）。`npm test` 428 pass。
+- 这两条都不改内核提示词正文，无需 `npm run qoder:sync`。
+
+## English
+
+- **1.2.5**.
+- **Fake reverts are gone (absorbed from qiuqianyi66/dsh-purge 1.2.6)**: `.dshpurge.bak` was only created when missing, so a history of "patch first, backup later" stored the already-patched bytes as the baseline. `revertAll` then copied a patched file over itself — no error, zero diff, a success message, every patch still in place. New `detectBaselineLost()`: when a backup is byte-identical to the body *and* the body really is patched (a writing patch's marker present, original pattern gone), the file is listed separately as `baseline_lost`, the backup is kept as evidence, and it is no longer counted as reverted. Same-bytes backups without patch traces stay `skipped`. Verify-only patches (no replacements) are never used as evidence.
+- `baseline_lost` is surfaced in all three revert entry points — CLI `--revert`, `/purge revert`, and the panel — telling the user to rebuild the baseline from the official package/asar. `--apply` runs a read-only pre-check and warns first, then patches as usual.
+- **Failed assembly no longer drops tool schemas (absorbed from ZXEB/dsh-purge v1.1.75)**: when native `assemble` threw on the first call (no `lastGood` yet), the old fallback returned `{ sections:[], contexts:[], tools:[] }`; with no tool schema the model wrote tool calls as prose (DSML), looking like "the model won't call tools". A process-level `RECENT_ASSEMBLY_TOOLS` now remembers the last successful tool set; the fallback reuses a complete `lastGood` first, otherwise restores the tool schema while keeping sections and contexts. Deliberately **no `throw err`** — the local guard's standing rule is that a downstream throw must not kill the whole waterfall (UI "woke up mid-task"); only the "don't drop tools" kernel was borrowed.
+- 11 new regression tests, all synthetic fixtures (CI needs no host): `test/baseline-lost.test.mjs` (6) and `test/assemble-guard.test.mjs` (5). `npm test` 428 pass.
+- Neither change touches the core prompt text; no `npm run qoder:sync` needed.
+
 # 1.2.4
 
 ## 中文
