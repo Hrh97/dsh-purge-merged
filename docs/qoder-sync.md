@@ -56,7 +56,7 @@ npm run qoder:verify    # 装好的 Qoder CN 里那个 prompt，是不是当前�
 ## 内核改完之后的标准动作
 
 ```sh
-# 1. 内核提示词改了（lib/default-prompt-inject.zh.md / .en.md）
+# 1. 内核提示词改了（仅 lib/default-prompt-inject.zh.md 驱动 Qoder；.en.md 不影响 Qoder）
 npm run qoder:sync               # 重建 qoder 那份
 npm test                         # qoder-prompt-sync 会确认没漏
 
@@ -74,7 +74,7 @@ node lib/qoder/qoder-purge.mjs --verify          # 应 exit 0
 Qoder 那边**没有**以下东西，也不打算搬：
 
 - `lib/leaf-inject.js` 的叶子域词表 —— 那是 DSH 按会话算域路由的表，Qoder 没有 hook 点。
-- `skills/redteam/` 24 个技能 —— Qoder 不读这个目录。
+- `skills/redteam/` 25 个技能（以 SKILLS-SHA256.txt 为准）—— Qoder 不读这个目录。
 - `--eval` / `--lessons` / `scoped-capability` / 会话隔离 —— 全是 DSH 侧的评测与 UI 基础设施。
 - `lib/core.js` 的 89 条补丁 —— 文件级改写 DSH 的包，Qoder 是另一套 app。
 
@@ -155,6 +155,8 @@ Qoder 从 0.5.1 起改了两件事，脚本跟着改了三处。这三处都踩�
 > 它和 `--force` 的区别只在于「换文件的方式」，不改变补丁内容。
 
 ### 0.5.1 上的实测结果
+
+> 以下是 0.5.1 的历史快照（表索引、`permissionSites: 9` 均为当时值），勿当作当前版本；当前值以 `node lib/qoder/qoder-purge.mjs --check` 的实测输出为准。
 
 ```text
 $ node lib/qoder/qoder-purge.mjs --check --force
