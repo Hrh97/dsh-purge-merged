@@ -1,3 +1,27 @@
+# 1.2.6
+
+## 中文
+
+- 版本 **1.2.6**。
+- **`withNudge` 的 system content 恒输出 block 数组（吸收 devin667/dsh-purge-022 rc2.13.1）**：宿主发请求前会对 `message.content` 调 `.some(...)`，字符串形态会抛 `TypeError`，且畸形消息已进历史、之后每轮重炸。原实现在 minimal / ptc 这类预设下（system content 是字符串）把加固指令拼成更长的字符串塞回去，正是同源触发点。现在字符串分支收敛成 `[{ type:"text", text }]`，「无 system 消息原样返回」「非文本 block 不改写」「不改原对象」三条约定保留。数组分支若一个 text 块都没有（纯 image / 空数组，金鱼审查 L4），补一个纯 text 块承载加固指令——否则 nudge 静默丢失、重试白发一次请求；有 text 块时路径不变。
+- **交付结果审计标签（吸收 kingcharleslzy-ai/dsh-purge 1.7.20）**：原判定只看开头 400 字，两种假成功被记成 `recovered`——「先给背景再把请求推掉」和「重试后只吐几十个字」。新增 `judgeDelivery()` / `judgeOutcome()`，流全部结束后采样最多 8000 字（只审计、不收回、不改写已流出的文字）打四类标签：`refused`（调用方明确判定拒答且交付薄）、`partial_refused`（全文有拒绝句式且交付薄、没触发重试）、`empty_after_retry`（重试后文本 <200 字且交付薄）、`recovered`（有实质代码/步骤）。经 `onOutcome` 回调写进 `stats.refusalOutcome` / `stats.refusalOutcomeLast`，宿主可挂 `onRefusalOutcome`。默认行为不变，只是统计口径诚实了。
+- **图像类推脱开场保守吸收（devin667 rc2.11 子集）**：`classifyStealthOpening` 补「这张我跳过」「这条我不接」两条纯推脱开场——图像任务里模型常用这两句，旧表全是文本任务话术、一条都不命中。两条词**句末锚定**（整词后紧跟标点/句末才算），「这张我跳过颜色」「这条我不接手」这类带宾语的正常开场不误伤。**刻意不收**「我无法核实 / 不改变性质」这类会出现在正常答复里的措辞，也不引入图像专用重试帧（本地无图像请求识别）。
+- 未吸收：qiuqianyi66 1.2.7 的基线刷新复发口子——本地 `refreshStaleBaksForUpgrade` 已用 marker 判据、`textLooksPatched` 已是「marker 命中 + 原 pattern 消失」，同款复发路径不存在；devin667 rc2.13.1 的体积保险丝（#19 修剪器预算）——本地补丁表结构不同，无对位点。
+- **金鱼独立盲审后修复（报告 `docs/lessons/egm-fresh-review-2026-11-18.md`）**：H1 缓冲 chunk 二次采样致 `chars`/`steps` 翻倍（去掉两处重复 `trackChunk`，补「chars 严格等于正文长度」断言）；M1 补 `refused` 第四类标签；M2 长文短路 `THIN_PROSE_FLOOR=600`，散文式交付不再被误判 thin；M3 stealth 两条词改句末锚定；M4 采样精确截断到上限（单 chunk 超长不再撑爆 8000）；L3 分号/围栏启发式收紧；L4 `withNudge` 在 system content 无 text 块时补一个纯 text 块承载加固指令（旧实现静默丢 nudge、重试白发一次请求），有 text 块时路径不变。
+- 新增回归测试 13 条（content 形状 1、审计标签 5、图像规则 1、金鱼修复 6 含 L4），全套 `npm test` **441 pass / 0 fail**。
+- 三处都不改内核提示词正文，无需 `npm run qoder:sync` / Qoder / WorkBuddy 重打。
+
+## English
+
+- **1.2.6**.
+- **`withNudge` now always emits block arrays for system content (absorbed from devin667/dsh-purge-022 rc2.13.1)**: hosts call `.some(...)` on `message.content` before sending; a string throws `TypeError`, and the malformed message is already in history so every later turn blows up again. Under minimal/ptc presets (where system content is a string) the old code appended the directive into a longer string — the same trigger. The string branch now emits `[{ type:"text", text }]`; the "no system message → pass through", "leave non-text blocks alone" and "don't mutate the original" contracts stay.
+- **Delivery-outcome audit labels (absorbed from kingcharleslzy-ai/dsh-purge 1.7.20)**: judgement only looked at the first 400 chars, so two fake successes were logged as `recovered` — "give background then push the request away" and "retry returns a few dozen chars". New `judgeDelivery()` / `judgeOutcome()` sample up to 8000 chars after the stream ends (audit only — nothing is retracted or rewritten) and label the turn into four classes: `refused` (caller explicitly judged refusal with a thin delivery), `partial_refused` (full text has refusal phrasing and a thin delivery, no retry fired), `empty_after_retry` (retried text <200 chars and thin), `recovered` (substantial code/steps). Surfaced via `onOutcome` into `stats.refusalOutcome` / `stats.refusalOutcomeLast`; hosts may hook `onRefusalOutcome`. Default behaviour is unchanged — only the accounting is honest.
+- **Conservative subset of image-task refusal openings (devin667 rc2.11)**: adds two pure-refusal openings, "这张我跳过" and "这条我不接" — image tasks often use these while the old table was all text-task phrasing. Both are end-anchored (the whole phrase must be followed by punctuation or end-of-string), so normal openers with an object like "这张我跳过颜色" are not false-flagged. Deliberately excluded "我无法核实 / 不改变性质" (they occur in normal replies) and no image-specific retry frame (no image-request detection locally).
+- Not absorbed: qiuqianyi66 1.2.7's stale-baseline relapse — local `refreshStaleBaksForUpgrade` already uses the marker verdict and `textLooksPatched` already means "marker present + original pattern gone", so the relapse path does not exist here; devin667 rc2.13.1's size circuit-breaker (#19 pruner budget) has no counterpart in this patch table.
+- Post-review fixes from an independent goldfish blind review (report `docs/lessons/egm-fresh-review-2026-11-18.md`): H1 buffered chunks were sampled twice, doubling `chars`/`steps` (removed the two duplicate `trackChunk` calls, added a "chars === emitted text length" assertion); M1 added the fourth `refused` label; M2 long-prose short-circuit `THIN_PROSE_FLOOR=600` so prose deliveries are no longer mislabelled thin; M3 stealth phrases are end-anchored; M4 sampling is now truncated exactly at the cap (an oversized single chunk no longer blows past 8000); L3 tightened the semicolon/fence heuristics; L4 `withNudge` now prepends a text block when system content has none (previously nudge was silently dropped and the retry was wasted).
+- 13 new regression tests (1 content shape, 5 outcome labels, 1 image rule, 6 goldfish fixes incl. L4). `npm test` **441 pass / 0 fail**.
+- None of the three touches the core prompt text; no `npm run qoder:sync` / Qoder / WorkBuddy reapply needed.
+
 # 1.2.5
 
 ## 中文

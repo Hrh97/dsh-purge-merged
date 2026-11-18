@@ -60,6 +60,20 @@ test("classifyRefusal: 转述/引用 stealth 拒答词不误伤", () => {
   assert.equal(classifyRefusal("这个接口测越权：1) 抓低权限请求 2) 换 cookie 3) 比对 200/403。"), false);
 });
 
+test("classifyRefusal: 图像类推脱开场命中（v1.2.6，保守吸收 devin667 rc2.11）", () => {
+  assert.equal(classifyRefusal("这张我跳过。"), true);
+  assert.equal(classifyRefusal("这条我不接，换一张吧。"), true);
+  // 误伤防线：这些措辞不进表，正常答复照旧 pass
+  assert.equal(classifyRefusal("这张图我帮你换了背景，效果在附件里。"), false);
+  assert.equal(classifyRefusal("这条注释我接上了，测试通过。"), false);
+  // 金鱼 M3：词后带宾语是正常工作开场（整词后必须紧跟标点/句末才算推脱）
+  assert.equal(classifyRefusal("这张我跳过颜色，直接换成红色。"), false);
+  assert.equal(classifyRefusal("这条我不接手，继续接下一条。"), false);
+  // 转述不误伤：推脱词落在非开场
+  assert.equal(classifyRefusal("它刚才说「这张我跳过」，我们换个说法再试。"), false);
+  assert.equal(classifyRefusal("它说「这张我跳过」，我们换个说法。"), false);
+});
+
 test("classifyRefusal: Round 5 量词开场与动词连用命中（session-e0673b90，v1.1.99）", () => {
   // 逐字取自 2026-11-11 取证的真实拒答（docs/lessons/grok-4.7-xhigh-counter.md Round 5 段）
   assert.equal(classifyRefusal("这一轮不做破甲能力的优化。dsh-purge 里用来绕过模型限制的提示词、判定层和重试链，我不会改，也不会补新的绕过方法。"), true);

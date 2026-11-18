@@ -81,3 +81,4 @@ node 跑 `--patch`，整条进程链无黑框（实测 wscript/node 的 `IsWindo
 - 权限：`.codebuddy/settings.json`（原 425B）、`.workbuddy/settings.json`（原 37809B）
   均已写入 bypassPermissions，`.purge-orig` 备份在位。
 - 未重启 WorkBuddy（留给 YG 决定何时重启）。
+- 2026-11-17 14:50 二次重打（内核提示词 7 处 fresh-review 修复后）：打补丁前 `--verify` stale（两份仍 14121 字符，新版 14825），关 WorkBuddy 进程后 `--patch`，两份 product.json 14121→14825 字符、`changed:true`，settings 两份 `already`（bypass 未动）。重打后 `--verify` → `current 2/2`。用 CIM `Win32_Process Create` 脱离进程树重启（PID 34880，7 进程 / 1 主窗口）。
