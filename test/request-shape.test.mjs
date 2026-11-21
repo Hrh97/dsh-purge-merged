@@ -10,6 +10,7 @@ import assert from "node:assert/strict";
 
 import {
   DEFAULT_PREFILL_TEXT,
+  applyWorkspaceBaselinePolicy,
   buildPrefillText,
   classifyRefusal,
   cloneMessages,
@@ -443,4 +444,53 @@ test("classifyRefusal: 总结前缀与对象后置不误伤正常行文（v1.2.3
   assert.equal(classifyRefusal("之前模型说「这条我不做」，我们改了措辞。"), false);
   // 「结论」后面没有冒号 = 正常行文，前缀不剥、判定按原文走
   assert.equal(classifyRefusal("结论先写实现，再补测试说明。"), false);
+});
+
+/* ---- C: workspace baseline 三态策略（v1.2.7，吸收 CallMeGuLab 2.0.0） ---- */
+
+const baselineBlock = () => ({ type: "text", text: "The following workspace instructions may be relevant to your work. Use them as guidance." });
+const plainSys = () => ({ role: "system", content: [{ type: "text", text: "你是一名工程师。" }, baselineBlock()] });
+const injectSys = () => ({ role: "system", source: { kind: "dsh-purge" }, content: [{ type: "text", text: "<project_instructions>小码酱规则</project_instructions>" }] });
+
+test("workspaceBaseline: always（默认）保留 baseline，既有行为不变", () => {
+  const messages = [plainSys(), userMsg("hi")];
+  const stats = {};
+  const out = applyWorkspaceBaselinePolicy(messages, {}, stats);
+  assert.equal(out[0].content.length, 2);
+  assert.equal(stats.workspaceBaselineDropped, undefined);
+});
+
+test("workspaceBaseline: strict 一律剥掉 baseline block", () => {
+  const stats = {};
+  const out = applyWorkspaceBaselinePolicy([plainSys(), userMsg("hi")], { workspaceBaseline: "strict" }, stats);
+  assert.equal(out[0].content.length, 1);
+  assert.match(out[0].content[0].text, /工程师/);
+  assert.equal(stats.workspaceBaselineDropped, 1);
+});
+
+test("workspaceBaseline: fallback 无用户 inject 时保留 baseline", () => {
+  const stats = {};
+  const out = applyWorkspaceBaselinePolicy([plainSys(), userMsg("hi")], { workspaceBaseline: "fallback" }, stats);
+  assert.equal(out[0].content.length, 2);
+  assert.equal(stats.workspaceBaselineDropped, undefined);
+});
+
+test("workspaceBaseline: fallback 有用户 inject 时剥掉 baseline", () => {
+  const stats = {};
+  const out = applyWorkspaceBaselinePolicy([injectSys(), plainSys(), userMsg("hi")], { workspaceBaseline: "fallback" }, stats);
+  assert.equal(out[1].content.length, 1);
+  assert.equal(out[0].content.length, 1, "用户 inject 自己不能被剥");
+  assert.equal(stats.workspaceBaselineDropped, 1);
+});
+
+test("workspaceBaseline: 未知值按 always 处理，不改行为", () => {
+  const out = applyWorkspaceBaselinePolicy([plainSys()], { workspaceBaseline: "bogus" });
+  assert.equal(out[0].content.length, 2);
+});
+
+test("workspaceBaseline: reshapeMessages 已接入该策略（strict 生效）", () => {
+  const stats = {};
+  const out = reshapeMessages([plainSys(), userMsg("hi")], { workspaceBaseline: "strict" }, stats);
+  assert.equal(out[0].content.length, 1);
+  assert.equal(stats.workspaceBaselineDropped, 1);
 });

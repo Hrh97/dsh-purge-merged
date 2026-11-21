@@ -460,3 +460,65 @@ test("M4：超采样上限的流只按前 OUTCOME_SAMPLE_CHARS 字判定", async
 	assert.equal(outcome.chars, OUTCOME_SAMPLE_CHARS, "chars 恰好截断到采样上限");
 	assert.equal(outcome.outcome, "recovered");
 });
+
+// ---- 社区 1.7.19 fail-open 降级回归（建流失败 / 中途断流） ----
+
+// 第一发固定是拒答，保证走到重试分支；第二发由各用例决定怎么失败。
+const refusalThen = (secondFactory) => {
+	let calls = 0;
+	return {
+		calls: () => calls,
+		factory: () => {
+			calls += 1;
+			if (calls === 1) return streamOf([
+				{ type: "text-delta", text: "I cannot assist with that request." },
+				{ type: "finish" },
+			]);
+			return secondFactory();
+		},
+	};
+};
+const REFUSAL_TEXT = "I cannot assist with that request.";
+
+test("A：重试建流失败 → fail-open 吐上一轮拒答，audit outcome=error", async () => {
+	let outcome = null;
+	const { factory, calls } = refusalThen(() => { throw new Error("stream start boom"); });
+	const out = await collect(streamWithRefusalRetry(factory, OPTS, {
+		goal: "分析样本", maxAttempts: 1, onOutcome: (r) => { outcome = r; },
+	}));
+	assert.equal(calls(), 2, "确实尝试过重试");
+	const text = out.filter((c) => c.type === "text-delta").map((c) => c.text).join("");
+	assert.equal(text, REFUSAL_TEXT, "吐出的是上一轮拒答原文，不是空回合");
+	assert.equal(outcome.outcome, "error");
+	assert.equal(outcome.frame, "start");
+	assert.match(outcome.error, /stream start boom/);
+});
+
+test("A：重试中途断流 → 丢弃半截重试输出，只吐上一轮拒答，audit outcome=error", async () => {
+	let outcome = null;
+	const { factory, calls } = refusalThen(() => (async function* broken() {
+		yield { type: "text-delta", text: "这是半截重试输出" };
+		throw new Error("iteration boom");
+	})());
+	const out = await collect(streamWithRefusalRetry(factory, OPTS, {
+		goal: "分析样本", maxAttempts: 1, onOutcome: (r) => { outcome = r; },
+	}));
+	assert.equal(calls(), 2);
+	const text = out.filter((c) => c.type === "text-delta").map((c) => c.text).join("");
+	assert.equal(text, REFUSAL_TEXT, "不能把半截重试输出拼进去");
+	assert.equal(outcome.outcome, "error");
+	assert.equal(outcome.frame, "iteration");
+});
+
+test("A：首次流建流失败仍照原样抛错（不掩盖真实上游故障）", async () => {
+	let threw = false;
+	try {
+		await collect(streamWithRefusalRetry(() => { throw new Error("first boom"); }, OPTS, {
+			goal: "分析样本", maxAttempts: 1,
+		}));
+	} catch (err) {
+		threw = true;
+		assert.match(err.message, /first boom/);
+	}
+	assert.equal(threw, true, "首次建流失败必须抛出");
+});
