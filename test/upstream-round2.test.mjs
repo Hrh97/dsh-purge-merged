@@ -99,6 +99,67 @@ test("replacementResultPresent 容忍行尾分号差异（官方产物多一个 
   );
 });
 
+test("replacementResultPresent 前缀兜底按行首锚定（金鱼审查 L2）", async () => {
+  const doctor = await import("../lib/anchor-doctor.js");
+  // ≥120 字符的产物行走前缀兜底：行首命中才算，全文任意位置的子串不算。
+  const productBare = 'const X = "' + "a".repeat(130) + '"';          // 无分号形态
+  const productLine = productBare + ";";                                // 官方产物形态
+  const body = ["function unrelated() {}", productLine, "// tail"].join("\n");
+  const lineSet = new Set(body.split(/\r?\n/).map((l) => l.trim()));
+  assert.equal(doctor.replacementResultPresent(body, lineSet, productBare), true, "行首前缀命中 → 已落地");
+
+  // 同前缀片段出现在另一行中间（字符串参数里）→ 不算落地
+  const decoy = `log("${"a".repeat(130)}");`;
+  const body2 = `const filler = 1;\n${decoy}\n// end`;
+  const lineSet2 = new Set(body2.split(/\r?\n/).map((l) => l.trim()));
+  assert.equal(
+    doctor.replacementResultPresent(body2, lineSet2, productBare),
+    false,
+    "全文 includes 会被行中间的子串误命中；行首锚定后必须判未落地",
+  );
+});
+
+// ── B2. #110 拆 marker 后的升级链四场景（金鱼审查 H3）─────────────────────
+
+test("#110 四场景：老盘面升级 / 纯净宿主全打 / 升级后 skip / 部分漂移可见", async () => {
+  const core = await import("../lib/core.js");
+  const patch = core.ALL_PATCHES.find((p) => p.id === 110);
+  assert.ok(patch, "#110 必须在补丁表里");
+  assert.deepEqual(patch.markers, ["[dsh-purge-110a]", "[dsh-purge-110b]", "[dsh-purge-110c]"]);
+
+  // S1 老盘面（三段共用 marker 时代的产物）→ 归一成 a/b/c，lastLabelRef 不叠写
+  const oldProduct =
+    "const lastActionRef=(0,react.useRef)(`load`);const lastLabelRef=(0,react.useRef)(null); /* [dsh-purge-110] remember last resolved model label */\n" +
+    "const waiting=currentChoice===void 0&&state.status===`loading`;const hasCurrent=currentChoice!==void 0;/*…*/const modelLabel=waiting?t(`trigger.loading`):resolvedLabel; /* [dsh-purge-110] keep-last-label fallback v3 alias-strip groups-resolve */\n" +
+    "const purgeAliasProvider=provider=>String(provider??``).replace(/-purge$/,``);const currentChoice=choices[state.current===null?-1:choices.findIndex(c=>purgeAliasProvider(c.selection.provider)===purgeAliasProvider(state.current?.provider)&&c.selection.model===state.current.model)] /* [dsh-purge-110] alias-strip match */";
+  const s1 = core.applyReplacementsToText(oldProduct, patch, "client.js");
+  assert.equal(s1.hitMismatch, undefined, "老盘面升级不应报命中数失配");
+  const m1 = s1.text.match(/\[dsh-purge-110[a-z]*\]/g) || [];
+  assert.ok(m1.includes("[dsh-purge-110a]") && m1.includes("[dsh-purge-110b]") && m1.includes("[dsh-purge-110c]"), `老盘面应升级出 a/b/c 三 marker，实际 ${JSON.stringify(m1)}`);
+  assert.equal((s1.text.match(/const lastLabelRef=/g) || []).length, 1, "lastLabelRef 不得叠写");
+
+  // S2 纯净宿主（rc.5 原文）→ 三段全打
+  const bare =
+    "const lastActionRef=(0,react.useRef)(`load`);\n" +
+    "const waiting=currentChoice===void 0&&state.status===`loading`;const modelLabel=waiting?t(`trigger.loading`):currentChoice?.model.name??t(`trigger.fallback`);\n" +
+    "const currentChoice=choices[state.current===null?-1:choices.findIndex(c=>c.selection.provider===state.current?.provider&&c.selection.model===state.current.model)]";
+  const s2 = core.applyReplacementsToText(bare, patch, "client.js");
+  assert.equal(s2.hitMismatch, undefined);
+  const m2 = s2.text.match(/\[dsh-purge-110[a-z]*\]/g) || [];
+  assert.equal(m2.length, 3, `纯净宿主应打出 3 个 marker，实际 ${JSON.stringify(m2)}`);
+
+  // S3 升级后再跑 → skipIfMarked 跳过（changed=false）
+  const s3 = core.applyReplacementsToText(s1.changed ? s1.text : oldProduct, patch, "client.js");
+  assert.equal(s3.changed, false, "升级完成的文件再跑必须 skip");
+
+  // S4 部分漂移（v1 产物在、v2/v3 被官方重写）→ 状态判定非 applied
+  const partial =
+    "const lastActionRef=(0,react.useRef)(`load`);const lastLabelRef=(0,react.useRef)(null); /* [dsh-purge-110a] remember last resolved model label */\nconst waiting=OFFICIAL_REWROTE;";
+  const s4 = core.applyReplacementsToText(partial, patch, "client.js");
+  assert.equal(s4.hitMismatch, undefined, "部分漂移不报 mismatch（no-op 跳过）");
+  assert.notEqual(core.filePatchOutcome(partial, patch, "client.js"), "applied", "部分漂移绝不能判 applied");
+});
+
 test("replacementResultPresent 不把过短的产物行当成已落地", async () => {
   const doctor = await import("../lib/anchor-doctor.js");
   const body = "x\n";
@@ -267,4 +328,51 @@ test("包内预设已无 rc.5 废弃键（backgroundMode / modelSelectionSetting
   assert.ok(!/modelSelectionSettings:/.test(configLines), "modelSelectionSettings 在 rc.4+ 已改名");
   assert.ok(!/toolFilter:/.test(configLines), "toolFilter 在 rc.5 会直接抛错");
   assert.ok(!/dsh-workflow-worker-thread/.test(configLines), "rc.5 没有 workflow-worker-thread 这个包");
+});
+
+// ── C. 金鱼审查 M3/M4：共享 yaml-keys 与子代理兼容层 ──────────────────────
+
+test("stripYamlKeyBlock 与 stripYamlScalarKey 是 tools/ui/migrate 的唯一实现（M3）", async () => {
+  const yk = await import("../lib/redteam/yaml-keys.js");
+  // 块删除：块内空行不结束块（空行后仍更深缩进的内容继续删）
+  const withBlankInside = "a: 1\ntoolFilter:\n  - bash\n\n  - read\nb: 2\n";
+  assert.equal(yk.stripYamlKeyBlock(withBlankInside, "toolFilter").text, "a: 1\nb: 2\n");
+  // 块尾空行保留为分隔
+  const blankAfter = "a: 1\ntoolFilter:\n  - x\n\nb: 2\n";
+  assert.equal(yk.stripYamlKeyBlock(blankAfter, "toolFilter").text, "a: 1\n\nb: 2\n");
+  // 内联形态
+  assert.equal(yk.stripYamlKeyBlock("a: 1\ntoolFilter: [bash]\nb: 2\n", "toolFilter").text, "a: 1\nb: 2\n");
+  // 单行标量
+  assert.equal(yk.stripYamlScalarKey("a: 1\nbackgroundMode: continuable\nb: 2\n", "backgroundMode").text, "a: 1\nb: 2\n");
+  // 幂等
+  const once = yk.stripYamlKeyBlock(withBlankInside, "toolFilter").text;
+  assert.equal(yk.stripYamlKeyBlock(once, "toolFilter").changed, false);
+});
+
+test("listDirectChildRows 兼容 listDescendants 与 listChildren（M3 共享实现）", async () => {
+  const sc = await import("../lib/redteam/subagent-compat.js");
+  // rc.4+：只有 listDescendants，返回整棵子树，depth===1 是直接子
+  const rc5 = {
+    listDescendants: async () => [
+      { id: "a", kind: "child", depth: 1, label: "A" },
+      { id: "b", kind: "child", depth: 2 },
+      { id: "c", kind: "teammate", depth: 1 },
+    ],
+  };
+  const r1 = await sc.listDirectChildRows(rc5, "root");
+  assert.equal(r1.available, true);
+  assert.deepEqual(r1.rows.map((x) => x.id), ["a"]);
+  assert.equal(sc.childLabel(r1.rows[0]), "A");
+  // 旧版：只有 listChildren，无 depth 字段 → 不过滤层
+  const legacy = { listChildren: async () => [{ id: "x", kind: "child" }, { id: "y", kind: "child" }] };
+  const r2 = await sc.listDirectChildRows(legacy, "root");
+  assert.equal(r2.rows.length, 2);
+  // 注册表缺失 / 方法缺失 → available:false + error
+  assert.equal((await sc.listDirectChildRows(null, "root")).available, false);
+  assert.equal((await sc.listDirectChildRows({}, "root")).available, false);
+  // 抛错被接住
+  const boom = { listDescendants: async () => { throw new Error("boom"); } };
+  const r3 = await sc.listDirectChildRows(boom, "root");
+  assert.equal(r3.available, false);
+  assert.match(r3.error, /boom/);
 });

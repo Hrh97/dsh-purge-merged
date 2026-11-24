@@ -69,6 +69,11 @@ test("CONTENT_REFUSED 等确定性失败算永久失败，不该再自动重试"
     "INVALID_CONFIG",
     "TOOL_ACTIVATION_FAILED",
     "DSH_TOOL_FORMAT",
+    // 金鱼审查 M1 补漏：同为构造期确定性失败，宿主 dsh-llm 码表实测在列。
+    "INVALID_ADAPTER",
+    "INVALID_PREPARED_CALL",
+    "REGISTRATION_DISPOSED",
+    "MODEL_SWITCH_COMPACTION_FAILED",
   ]) {
     assert.equal(isPermanentFailure(code), true, `${code} 必须是永久失败码`);
     assert.equal(isPermanentFailure(code.toLowerCase()), true, `${code} 大小写不敏感`);
@@ -85,28 +90,38 @@ test("可重试的失败码仍然不是永久失败", async () => {
 // ── 3. redteam 子代理注册表：listDescendants 回退 ──────────────────────────
 
 test("redteam 用 listDescendants 也能算直接子会话（rc.4+ 只有它）", async () => {
-  const src = fs.readFileSync(path.join(REPO, "lib", "redteam", "tools.js"), "utf8");
-  assert.match(src, /listDescendants/, "tools.js 必须有 listDescendants 回退");
-  assert.match(src, /depth === 1/, "按 depth===1 过滤出直接子");
+  // 金鱼审查 M3 后：兼容逻辑集中在 lib/redteam/subagent-compat.js，
+  // tools.js / ui.js 只 import 它。断言跟着搬家，避免源码正则双份漂移。
+  const compat = fs.readFileSync(path.join(REPO, "lib", "redteam", "subagent-compat.js"), "utf8");
+  assert.match(compat, /listDescendants/, "subagent-compat.js 必须有 listDescendants 回退");
+  assert.match(compat, /depth === 1/, "按 depth===1 过滤出直接子");
   // 标签回退顺序：label → name → id（rc.5 的 SubagentListEntry 三个都可能为空）
-  assert.match(src, /e\.label \|\| e\.name \|\| e\.id/);
+  assert.match(compat, /k\.label \|\| k\.name \|\| String\(k\.id\)/);
 
+  // 两个调用方都走共享实现，不再各写一份
+  const toolsSrc = fs.readFileSync(path.join(REPO, "lib", "redteam", "tools.js"), "utf8");
+  assert.match(toolsSrc, /from '\.\/subagent-compat\.js'/, "tools.js 必须复用 subagent-compat.js");
   const uiSrc = fs.readFileSync(path.join(REPO, "lib", "redteam", "ui.js"), "utf8");
-  assert.match(uiSrc, /listDescendants/, "ui.js 必须有 listDescendants 回退");
+  assert.match(uiSrc, /from '\.\/subagent-compat\.js'/, "ui.js 必须复用 subagent-compat.js");
   assert.match(uiSrc, /listDirectChildren/);
 });
 
 test("redteam 调用子代理注册表前先探测方法是否存在", async () => {
+  // 探测逻辑同样只在 subagent-compat.js 里有一份。
+  const compat = fs.readFileSync(path.join(REPO, "lib", "redteam", "subagent-compat.js"), "utf8");
+  assert.match(
+    compat,
+    /typeof\s+subagents\.listChildren === 'function'|hasLegacy/,
+    "subagent-compat.js 必须在调用前探测 listChildren 是否存在",
+  );
+  assert.match(compat, /listDescendants/, "subagent-compat.js 必须有 listDescendants 回退");
+  // 两个调用方都不许自己裸调注册表方法
   for (const f of ["tools.js", "ui.js"]) {
     const src = fs.readFileSync(path.join(REPO, "lib", "redteam", f), "utf8");
-    // rc.5 只有 listDescendants，没有 listChildren。裸调 listChildren 会抛
-    // TypeError；必须先探测方法存在再调。
-    assert.match(
-      src,
-      /typeof\s+\w+\??\.listChildren === 'function'|hasLegacy/,
-      `${f} 必须在调用前探测 listChildren 是否存在`,
+    assert.ok(
+      !/subagents\??\.listChildren\(/.test(src),
+      `${f} 不该自己裸调 listChildren（应走 subagent-compat.js）`,
     );
-    assert.match(src, /listDescendants/, `${f} 必须有 listDescendants 回退`);
   }
 });
 

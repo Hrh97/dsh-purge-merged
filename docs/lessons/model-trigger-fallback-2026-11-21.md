@@ -50,3 +50,14 @@
 - v3 修法：findIndex 行加 `purgeAliasProvider=provider=>String(provider??``).replace(/-purge$/,``)`，比较双侧剥后缀（与 #96 的 routeProvider 同一判定）；v2 的 groups 兜底解析同步剥后缀。别名选择直接映射回源 provider 目录条目，`renderModelLabel` 显示真实模型名。发消息时 request-shape hook 的 isOwnAlias 分支会自动补注册别名，路由不受影响。
 - 落地坑：bundle 里该行带 `const ` 前缀，pattern 漏前缀会替换出 `const const` 语法错误——第一次临时副本 node --check 抓到后修正。v3 实际替换两处 + v2 行升级，size 62,931B，标记 3 处，rev 3cfd8acd626d，curl 运行中 54116 已服务含 purgeAliasProvider×4 的字节。
 - dsh-purge #110 现为 3 条 replacement；npm test 462 全绿；applyPatches(write:false) 对桌面宿主 status=already。
+
+## v3b（2026-11-24）：「又出现」排查——补丁没被还原
+- YG 报「又出现，看看是不是修改被还原了」。核查结论：**没有还原**。磁盘 client.js 62,931B→v3b 63,013B，dsh-purge-110 标记在、purgeAliasProvider 4 处在；宿主 11-24 10:49 重启（端口 54116→54524，PID 52744），重启后 `/plugins` 与 relay 域名（e483c6400a987634.dsh-market.com）都在服务补丁版字节；旧 rev URL 已 404（缓存旧 URL 的页面刷新后会重新拿新 rev，不会跑旧代码）。无 .pnpm 第二副本。
+- 近期会话 modelSelection 全是 `*-purge` 别名（workbuddy-purge / workbuddy-global-purge / zi-purge / minimax-purge / raccoon-purge）→ v3 剥后缀逻辑单测命中（workbuddy-purge→workbuddy 组；workbuddy-global-purge→源组 workbuddy-global 需目录里存在）。
+- v3b 动作：加 `window.__dshPurge110` 计数痕迹（组件每次渲染 +1），DevTools console 可查是否在跑补丁版。落盘后 rev 93b0a4244e88，服务端 HTTP 200 已带痕迹。#110 repl3 同步并入痕迹行；npm test 495 pass（含 trace 依赖更新）。
+- 若 YG 复测仍退化：让他在该会话按 Ctrl+Shift+I → Console 输入 `window.__dshPurge110`——有数字=补丁在跑（往数据面查）；undefined=页面没在跑这份 bundle（往加载面查，硬刷新 Ctrl+R）。
+
+## v3b 的 `__dshPurge110` 痕迹已摘除（2026-11-24 金鱼审查 H2）
+- 上面 v3b 加的那行 `if(typeof window!==\`undefined\`){window.__dshPurge110=(window.__dshPurge110??0)+1;}` 是**临时排查痕迹**，一直留在 #110 的 replace 正文里、且未提交。桌面 profile 以符号链接指向本仓库，重启就会把它写进活宿主的 `dsh-client-ui-model-selection/lib/client.js` —— 调试计数器不该进生产补丁产物。
+- 处理：从 `lib/core.js` 的 #110 repl3 replace 里删掉该行，并从活宿主 client.js 剥掉已泄漏的 82 字符（备份 `/tmp/host-client-backup.js`）。`--apply` 后宿主三处 marker（`[dsh-purge-110a/b/c]`）在位、`node --check` 通过。
+- **下次要复测这个补丁，别改 replace 正文** —— `scripts/gen-patch-contract.mjs` 只锁 marker / pattern / replacement 长度，不锁 replace 正文，手改正文契约测试照样绿（这次就是这么漏出去的）。要临时观察就在 DevTools 里读 `document.querySelector` 的 React 树，或者另开一次性脚本打临时副本。

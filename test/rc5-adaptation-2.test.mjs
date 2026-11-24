@@ -162,8 +162,16 @@ test("#103 在 rc.5 由官方自己实现 → markersAny + softSettle，不再�
 
 // ── C. 巡检脚本补漏的 4 个活跃仓 ────────────────────────────────────────────
 
-test("巡检脚本已收录 4 个 rc.5 适配参考仓", () => {
-  const watch = fs.readFileSync("D:/hrh/dsh-watch/watch-upstream.mjs", "utf8");
+test("巡检脚本已收录 4 个 rc.5 适配参考仓（本机有脚本时才验，CI 跳过）", () => {
+  const watchPath = "D:/hrh/dsh-watch/watch-upstream.mjs";
+  if (!fs.existsSync(watchPath)) {
+    // 巡检脚本只存在于 YG 本机（D:\hrh\dsh-watch，不在本仓库内）；
+    // Linux CI 上没有这个文件，硬读必挂 —— 本仓库的 CI 承诺是
+    // 「契约测试不依赖宿主 DSH / 本机环境」（见 .github/workflows/ci.yml 头注释）。
+    // 用动态子测试 skip：node:test 的顶层 t.skip 需要 ctx，这里直接 return 空过。
+    return;
+  }
+  const watch = fs.readFileSync(watchPath, "utf8");
   for (const repo of [
     "ZXEB/dsh-purge",
     "qiuqianyi66/dsh-purge",
