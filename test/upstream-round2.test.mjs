@@ -394,3 +394,66 @@ test("listDirectChildRows 兼容 listDescendants 与 listChildren（M3 共享实
   assert.equal(r3.available, false);
   assert.match(r3.error, /boom/);
 });
+
+// ---------------------------------------------------------------------------
+// #110 探针降级（2026-11-24）：when:"110-probe" 门控 + probe strip 归一化
+// ---------------------------------------------------------------------------
+test('#110 gate off: pure host gets fixes without probes', async () => {
+  const { applyReplacementsToText, ALL_PATCHES } = await import('../lib/core.js');
+  const p = ALL_PATCHES.find((x) => x.id === 110);
+  const host = [
+    "const lastActionRef=(0,react.useRef)(`load`);",
+    "const waiting=currentChoice===void 0&&state.status===`loading`;const modelLabel=waiting?t(`trigger.loading`):currentChoice?.model.name??t(`trigger.fallback`);",
+    "const currentChoice=choices[state.current===null?-1:choices.findIndex(c=>c.selection.provider===state.current?.provider&&c.selection.model===state.current.model)]",
+    "const selection=projected.next??catalog.value.default;const routable=catalog.value.groups.some(group=>group.id===selection.provider&&group.models.some(model=>model.id===selection.model));",
+    "window.__ModuleLoader__.load({id:`@deepseek-ai/dsh-client-ui-model-selection`,factory:require=>{",
+    "children:currentChoice===void 0?modelLabel:renderModelLabel(currentChoice.group.provider,currentChoice.model,`trigger`,true)",
+  ].join("\n");
+  const r = applyReplacementsToText(host, p, "client.js");
+  assert.equal(r.changed, true);
+  assert.equal(r.text.includes("__dshPurge110Send"), false, "gate off must not inject probes");
+  assert.equal(r.text.includes("59999"), false);
+  assert.equal(r.text.includes("[dsh-purge-110a]"), true);
+  assert.equal(r.text.includes("[dsh-purge-110b]"), true);
+  assert.equal(r.text.includes("[dsh-purge-110d]"), true);
+  assert.equal(r.text.includes("lastOk"), true, "v5 resolve fallback (data fix) must stay");
+});
+
+test('#110 gate on: probes come back under DSH_PURGE_110_PROBE=1', async () => {
+  const { applyReplacementsToText, ALL_PATCHES } = await import('../lib/core.js');
+  const p = ALL_PATCHES.find((x) => x.id === 110);
+  const host = "window.__ModuleLoader__.load({id:`@deepseek-ai/dsh-client-ui-model-selection`,factory:require=>{";
+  process.env.DSH_PURGE_110_PROBE = "1";
+  try {
+    const r = applyReplacementsToText(host, p, "client.js");
+    assert.equal(r.text.includes("__dshPurge110Send"), true, "gate on must restore probe segment");
+    assert.equal(r.text.includes("[dsh-purge-110g]"), true);
+  } finally {
+    delete process.env.DSH_PURGE_110_PROBE;
+  }
+});
+
+test('#110 probe-laden host converges to clean terminal (strip segments)', async () => {
+  const { applyReplacementsToText, ALL_PATCHES } = await import('../lib/core.js');
+  const p = ALL_PATCHES.find((x) => x.id === 110);
+  // 模拟老宿主：修复段 + 全套探针产物（g/i/j/k）在盘
+  const host = [
+    "const lastActionRef=(0,react.useRef)(`load`);const lastLabelRef=(0,react.useRef)(null); /* [dsh-purge-110a] remember last resolved model label */",
+    ";if(typeof window!==`undefined`){window.__dshPurge110Comp={cur:currentChoice===void 0?null:{provider:currentChoice.group.provider,model:currentChoice.model.id,name:currentChoice.model.name},stateCurrent:state.current===null?null:{provider:state.current.provider,model:state.current.model},choices:choices.length,st:state.status};if(window.__dshPurge110Send)window.__dshPurge110Send(`comp`,JSON.stringify(window.__dshPurge110Comp));} /* [dsh-purge-110j] component-scope probe */",
+    "const currentChoice=choices[state.current===null?-1:(()=>{const i=choices.findIndex(c=>purgeAliasProvider(c.selection.provider)===purgeAliasProvider(state.current?.provider)&&c.selection.model===state.current.model);if(i>=0)return i;return -1;})()] /* [dsh-purge-110d] alias-strip + model-id/name fallback */",
+    "let selection=projected.next??catalog.value.default;let routable=true; /* [dsh-purge-110d] x */(typeof window!==`undefined`)&&(window.__dshPurge110Data={sel:selection,rt:routable,last:projected.lastUsed,next:projected.next,gn:catalog.value.groups.length,ts:Date.now()})&&(window.__dshPurge110Send&&window.__dshPurge110Send(`data`,JSON.stringify(window.__dshPurge110Data)));if(typeof window!==`undefined`&&window.__dshPurge110Send&&Date.now()-(window.__dshPurge110GroupsTs||0)>60000){window.__dshPurge110GroupsTs=Date.now();try{const payload=JSON.stringify(catalog.value.groups.map(group=>({id:group.id,models:(group.models||[]).map(m=>({i:m.id,n:m.name}))})));const enc=encodeURIComponent(payload);for(let i=0,part=0;i<enc.length;i+=1200,part++)navigator.sendBeacon(`http://127.0.0.1:59999/e?k=grp&n=${part}`,enc.slice(i,i+1200));}catch(_e){}} /* [dsh-purge-110i] resolve data probe + groups dump throttled */",
+    "children:currentChoice===void 0?modelLabel:renderModelLabel(currentChoice.group.provider,currentChoice.model,`trigger`,true)",
+  ].join("\n");
+  const r1 = applyReplacementsToText(host, p, "client.js");
+  assert.equal(r1.text.includes("[dsh-purge-110i]"), false, "110i tail must be stripped");
+  assert.equal(r1.text.includes("__dshPurge110Data"), false);
+  assert.equal(r1.text.includes("__dshPurge110Comp"), false, "110j must be stripped");
+  const r2 = applyReplacementsToText(r1.text, p, "client.js");
+  assert.equal(r2.changed, false, "second run must be a no-op (converged)");
+});
+
+test('#110 markers terminal state is fixes-only [a,b,d]', async () => {
+  const { ALL_PATCHES } = await import('../lib/core.js');
+  const p = ALL_PATCHES.find((x) => x.id === 110);
+  assert.deepEqual(p.markers, ["[dsh-purge-110a]", "[dsh-purge-110b]", "[dsh-purge-110d]"]);
+});
