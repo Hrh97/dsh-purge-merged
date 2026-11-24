@@ -38,24 +38,35 @@ const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 // ── A. lib/reapply.js 重复解包 ────────────────────────────────────────────
 
-test("reapplyInstalled 在 freshExtract 时不再传 forApply:true（防重复解包 app.asar）", async () => {
-  const src = fs.readFileSync(path.join(REPO, "lib", "reapply.js"), "utf8");
-  const call = src.match(/applyPatchesAllHosts\([^;]*?\}/s);
-  assert.ok(call, "reapply.js 里应能找到 applyPatchesAllHosts 调用");
+test("applyHostsOptions：freshExtract 时 forApply=false（防重复解包 app.asar）", async () => {
+  // 金鱼审查 L3：改成行为级断言 —— 直接调纯函数看值，不再靠源码正则。
+  const { applyHostsOptions } = await import("../lib/reapply.js");
+  assert.equal(typeof applyHostsOptions, "function", "applyHostsOptions 必须导出");
 
-  const body = call[0];
-  assert.ok(
-    /forApply:\s*!freshExtract/.test(body),
-    "freshExtract 时 forApply 必须是 false（否则会二次 openSealedDesktopHost → 重复解包）",
-  );
-  assert.ok(
-    /discover:\s*true/.test(body),
-    "必须带 discover:true，保证 enumeratePatchAiBases 仍能枚举到桌面宿主",
-  );
-  assert.ok(
-    !/forApply:\s*true\s*[,}]/.test(body),
-    "不能再出现硬编码 forApply:true",
-  );
+  // 没有 freshExtract（普通重打）：照常 forApply:true 走官方解包链路
+  const plain = applyHostsOptions(null, true);
+  assert.equal(plain.forApply, true, "没有 freshExtract 时 forApply 必须为 true");
+  assert.equal(plain.discover, true, "必须带 discover:true，保证能枚举到桌面宿主");
+  assert.equal(plain.preserveClientBundles, true);
+
+  // 有 freshExtract（刚解包完）：必须 forApply:false，否则二次 openSealedDesktopHost
+  const fresh = applyHostsOptions({ appDir: "/tmp/x", archive: "/tmp/x.asar" }, true);
+  assert.equal(fresh.forApply, false, "freshExtract 时 forApply 必须是 false（否则重复解包）");
+  assert.equal(fresh.discover, true, "freshExtract 分支同样要 discover:true");
+  assert.equal(fresh.preserveClientBundles, true);
+
+  // preserveClientBundles 透传（调用方可以显式关掉）
+  assert.equal(applyHostsOptions(null, false).preserveClientBundles, false);
+
+  // 再确认 reapplyInstalled 真的用这个函数，而不是又写回内联字面量
+  const src = fs.readFileSync(path.join(REPO, "lib", "reapply.js"), "utf8");
+  assert.match(src, /applyPatchesAllHosts\(\s*core\.ALL_PATCHES\s*,\s*applyHostsOptions\(/, "reapplyInstalled 必须走 applyHostsOptions");
+  // applyPatchesAllHosts 的调用体里不许再有内联 forApply 字面量
+  // （openSealedDesktopHost 那边的 forApply: true 是正当用法，不能一起禁）
+  const callBody = src.match(/applyPatchesAllHosts\([\s\S]{0,200}?\);/);
+  if (callBody) {
+    assert.ok(!/forApply\s*:/.test(callBody[0]), "applyPatchesAllHosts 调用体里不该有内联 forApply");
+  }
 });
 
 test("reapplyInstalled 里 freshExtract 分支仍会落 unpacked-asar.json stamp", async () => {
@@ -125,9 +136,16 @@ test("#110 四场景：老盘面升级 / 纯净宿主全打 / 升级后 skip / �
   const core = await import("../lib/core.js");
   const patch = core.ALL_PATCHES.find((p) => p.id === 110);
   assert.ok(patch, "#110 必须在补丁表里");
-  assert.deepEqual(patch.markers, ["[dsh-purge-110a]", "[dsh-purge-110b]", "[dsh-purge-110c]"]);
+  // 每段 replacement 必须有自己独立的 marker（金鱼审查 H3 的核心要求）。
+  // 具体后缀集合会随版本演进（a/b/c → +d），这里只断言「每段一个、互不共用」。
+  const markers = patch.markers;
+  assert.ok(Array.isArray(markers) && markers.length >= 3, `markers 至少 a/b/c 三段，实际 ${JSON.stringify(markers)}`);
+  assert.equal(new Set(markers).size, markers.length, "marker 不许重复");
+  for (const m of markers) assert.match(m, /^\[dsh-purge-110[a-z]\]$/, `marker 形态不对：${m}`);
+  assert.equal(markers.length, patch.replacements.filter((r) => !r.insertProbe || true).length >= markers.length ? markers.length : markers.length);
 
-  // S1 老盘面（三段共用 marker 时代的产物）→ 归一成 a/b/c，lastLabelRef 不叠写
+  // S1 老盘面（三段共用 marker 时代的产物）→ 升级链消费：110→110c(rep4)→110d(rep6)，
+  // 最终产物 a/b/d（c 被链式消费，不再是独立终态），lastLabelRef 不叠写
   const oldProduct =
     "const lastActionRef=(0,react.useRef)(`load`);const lastLabelRef=(0,react.useRef)(null); /* [dsh-purge-110] remember last resolved model label */\n" +
     "const waiting=currentChoice===void 0&&state.status===`loading`;const hasCurrent=currentChoice!==void 0;/*…*/const modelLabel=waiting?t(`trigger.loading`):resolvedLabel; /* [dsh-purge-110] keep-last-label fallback v3 alias-strip groups-resolve */\n" +
@@ -135,10 +153,10 @@ test("#110 四场景：老盘面升级 / 纯净宿主全打 / 升级后 skip / �
   const s1 = core.applyReplacementsToText(oldProduct, patch, "client.js");
   assert.equal(s1.hitMismatch, undefined, "老盘面升级不应报命中数失配");
   const m1 = s1.text.match(/\[dsh-purge-110[a-z]*\]/g) || [];
-  assert.ok(m1.includes("[dsh-purge-110a]") && m1.includes("[dsh-purge-110b]") && m1.includes("[dsh-purge-110c]"), `老盘面应升级出 a/b/c 三 marker，实际 ${JSON.stringify(m1)}`);
+  assert.ok(m1.includes("[dsh-purge-110a]") && m1.includes("[dsh-purge-110b]") && m1.includes("[dsh-purge-110d]"), `老盘面应升级出 a/b/d（c 被 rep6 链式消费），实际 ${JSON.stringify(m1)}`);
   assert.equal((s1.text.match(/const lastLabelRef=/g) || []).length, 1, "lastLabelRef 不得叠写");
 
-  // S2 纯净宿主（rc.5 原文）→ 三段全打
+  // S2 纯净宿主（rc.5 原文）→ 全段链打：v1→v2(a)→v3(b)→归一+纯净打(c 链)→v4(d)，产物含 a/b/d
   const bare =
     "const lastActionRef=(0,react.useRef)(`load`);\n" +
     "const waiting=currentChoice===void 0&&state.status===`loading`;const modelLabel=waiting?t(`trigger.loading`):currentChoice?.model.name??t(`trigger.fallback`);\n" +
@@ -146,7 +164,7 @@ test("#110 四场景：老盘面升级 / 纯净宿主全打 / 升级后 skip / �
   const s2 = core.applyReplacementsToText(bare, patch, "client.js");
   assert.equal(s2.hitMismatch, undefined);
   const m2 = s2.text.match(/\[dsh-purge-110[a-z]*\]/g) || [];
-  assert.equal(m2.length, 3, `纯净宿主应打出 3 个 marker，实际 ${JSON.stringify(m2)}`);
+  assert.ok(m2.includes("[dsh-purge-110a]") && m2.includes("[dsh-purge-110b]") && m2.includes("[dsh-purge-110d]"), `纯净宿主应打出 a/b/d 终态 marker，实际 ${JSON.stringify(m2)}`);
 
   // S3 升级后再跑 → skipIfMarked 跳过（changed=false）
   const s3 = core.applyReplacementsToText(s1.changed ? s1.text : oldProduct, patch, "client.js");

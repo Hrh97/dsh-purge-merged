@@ -61,3 +61,37 @@
 - 上面 v3b 加的那行 `if(typeof window!==\`undefined\`){window.__dshPurge110=(window.__dshPurge110??0)+1;}` 是**临时排查痕迹**，一直留在 #110 的 replace 正文里、且未提交。桌面 profile 以符号链接指向本仓库，重启就会把它写进活宿主的 `dsh-client-ui-model-selection/lib/client.js` —— 调试计数器不该进生产补丁产物。
 - 处理：从 `lib/core.js` 的 #110 repl3 replace 里删掉该行，并从活宿主 client.js 剥掉已泄漏的 82 字符（备份 `/tmp/host-client-backup.js`）。`--apply` 后宿主三处 marker（`[dsh-purge-110a/b/c]`）在位、`node --check` 通过。
 - **下次要复测这个补丁，别改 replace 正文** —— `scripts/gen-patch-contract.mjs` 只锁 marker / pattern / replacement 长度，不锁 replace 正文，手改正文契约测试照样绿（这次就是这么漏出去的）。要临时观察就在 DevTools 里读 `document.querySelector` 的 React 树，或者另开一次性脚本打临时副本。
+
+## v4（2026-11-24 下午）：v3 剥后缀仍会 MISS——跨区 model-id 兜底
+- YG 报 `window.__dshPurge110` = undefined。复盘：**页面确实在跑补丁版**（v3），但 v3 没有 window 痕迹——undefined 只说明跑的不是 v3b。
+- 真相分两层：
+  1. **宿主文件被回写**：11-24 上午我手工落盘 v3b（含痕迹），但当天 YG 走了 GUI「应用」（freshExtract 链）→ 还原官方原件 → 按 core.js #110（当时是 v3 形态）重打 → 磁盘变回 v3（无痕迹）。手工改宿主文件必须同步 core.js，否则一次「应用」就洗掉。这层是流程教训。
+  2. **v3 语义洞**：`workbuddy-purge` 剥后缀映射到 `workbuddy`（cn 组），但 hy4flash-free 实际登记在 workbuddy-global 组（模型目录是运行时从上游拉的，磁盘源码无静态定义）→ findIndex 仍 MISS → 依旧「请选择模型」。
+- SSE 决定性证据：`/plugins/events` 初始 snapshot 里 model-selection 的 rev=ea6c6142ee15，curl 该 rev 的字节只有 v3（无 `__dshPurge110`）——服务端服务的就是页面在跑的，闭环。
+- v4 修法：findIndex 失配后逐级兜底——②同 model id 任意目录条目 → ③model.name === 存的 model。显示层兜底，不改路由。四场景单测过（alias 直配 / 跨区 id 兜底 / 未知 MISS / name 兜底）。
+- markers 语义修：**markers 只列终态** [a,b,d]；c（rep4 归一产物）是瞬时态、立刻被 rep6 消费成 d。c 进 markers 会让 patchPartiallyMarked 对已打全文件永远假阳性（3/4 在场→拒绝软结算→假 drifted）。
+- 验证手段升级：`/plugins/events` SSE 的初始 graph snapshot 是免认证的——能直接读到宿主当前认的每包 rev，比本地算 rev 可靠（rev 算法细节我此前复刻有出入：本地 framedHash 算的 93b0a4244e88 ≠ 宿主认的 ea6c6142ee15，但 URL 里 rev 只是键，curl 服务端认的 rev 拿到的字节才是页面拿到的字节）。
+- 手工 patch 宿主 client.js 的标准流程（教训固化）：先改 core.js #N → npm run contract → npm test → 用补丁引擎 apply 落盘（而不是 sed/cp 手改）→ curl 服务端 rev 验字节。手改绕过引擎的结果就是被下一次「应用」洗掉。
+
+## v5（2026-11-24 晚）：「切走再切回就退化」的真根因——resolve 段数据面修复
+- YG 复现：session-2ae1bf1d 一开始显示正常，切走再切回 → 又变「请选择模型」。v4 的 findIndex 三级兜底修的是「current 有值但 choices 失配」；这次连 current 本身就是错的。
+- 数据链定案：
+  - 会话 modelSelection projection schema = `{lastUsed, next}`（dsh-api-session-controller/typert.host.js）。next=用户手动选的下一步选择；lastUsed=最近请求用的（request-shape 别名写这里）。
+  - 该会话存档 val={lastUsed:{workbuddy-purge,hy4flash-free}, pending:null}——**没有 next 字段**（undefined）。
+  - ModelDirectory.resolve（bundle 内）：`const selection=projected.next??catalog.value.default` → 切回会话时 next 未恢复 → selection=全局 default。
+  - 全局 default=**grok/grok-4.7**（bot/state.json，YG 某次手动选模型时 selectModel→saveSelection 存的）。
+  - 但 GUI 会话目录 groups 里**没有 grok 组**（grok 是 bot 线 adapter）→ routable=false、findIndex MISS、groups 解析 MISS → fallback。
+  - 「一开始有显示」=打开会话时 projected.next 短暂有值（宿主 unit 从 agent 初始化）；切走再切回 unit 重建，projection 回放只有 lastUsed → 落 default → 必 MISS。
+- v5 修法（resolve 段数据面）：selection 不可路由且 lastUsed 存在且≠selection 时，三级匹配 lastUsed（原 id → 剥 -purge → 仅 model id 全目录），命中则 current=lastUsed。current 本身变成可解析的真实选择，下游 findIndex/effort/高亮自然命中。routable/state.routable 在 rc.5 无其它消费者，改值安全。
+- 六场景单测过（/d/hrh/tmp-audit/v5-resolve-test.mjs）：YG 场景回落 / next 可路由不动 / default 可路由不动 / 剥后缀命中 / 未知模型保 default / 同值不循环。
+- core.js #110 加 rep7（v4→v5，marker 110e），markers 终态=[a,b,d,e]；npm test 499 全绿；引擎落盘 applied，SSE 新 rev=756819aeed95 服务字节已含 110e。
+- 坑：node 写 '/tmp/...' 落到 **D:\tmp**（进程盘符解析），MSYS /tmp 是另一处——跨工具传文件路径用绝对 D:/ 或先 cygpath 对齐。
+
+## v5c/v5d（2026-11-24 深夜）：自主探针定案——三个根因层级 + 110h 括号事故全解
+- YG 报「控制台很多报错、__dshPurge110Data 空」→ 自主验证路线：bundle 里插错误钩子（error/unhandledrejection/console.error → no-cors GET http://127.0.0.1:59999）+ resolve 段每 3s 上报 {sel,rt,last,next,gn}。收集器：D:\hrh\tmp-audit\err-collector2.mjs（job bash-e4d2dbea44864953，端口 59999）。
+- 探针数据推翻两个假设：①next 不是 undefined——它有值且=lastUsed（workbuddy-purge/hy4flash-free），v5 的 lastUsed 兜底条件 last!==selection 恒 false 不触发；②页面零运行时错误（YG 看到的报错是别的窗口的）。
+- sel=workbuddy-purge/hy4flash-free 在 v4 findIndex ②（按 model id 全目录）也 MISS → 决定性推论：**运行时目录 gn=22 组里根本没有 hy4flash-free 条目**。
+- groups dump 拿法一波三折（110h 括号事故）：fetch POST 版我数错括号（5 个 ) 应为 4）→ 宿主语法闸门拦截回滚，且回滚的现场本身就是坏的 → 手修 → 引擎 rep10 pattern 与手修产物不一致 → 引擎再写再拦截，最终磁盘回到 110g。**教训：改 bundle 长串必须独立 .mjs 脚本 + 程序化括号配平 + node --check 三关；core.js 里 replace 长串也要先配平**。
+- 改用 **sendBeacon 分片版**（encodeURIComponent 每 1200 字符一片，k=grp&n=N）仍报语法错——最后发现根因不是括号数量（-1 报少、+1/+2 报多），是**表达式上下文里嵌 IIFE+try/catch+for 的结构问题**。改成**语句形态**（if(...){...try{}catch{}}）一次通过。教训：往压缩 bundle 插代码，插「语句」比往表达式链里塞「IIFE」稳得多——pattern 保留原 &&( 链（110g 形态），replace 用 `;if(...){...}` 接续。
+- **cordis.patch.yml 里的 saved 目录（宿主设置持久化）**：`C:\Users\onemt\.dsh\profiles\desktop\cordis.patch.yml` 行 227 起 `dsh-connect-workbuddy.config.regions.{global,cn}.lastCatalog`——cn 区 lastCatalog **含 hy4flash-free（name: Hy4 flash）**、hy4std、hy4-flash-free-trial-202611、hy4flash、deepseek-v4.1-flash、glm-5.3、glm-5.3-flash 等；global 区是 fast/balanced/primary-model + hy4-preview + hy3。mergeRoster(saved, live)=live 优先 + saved 追加（workbuddy lib/index.js:171）→ 理论上合成目录应有 hy4flash-free。**UI gn=22 却没有 ⇒ 待 k=grp 回传比对**（hy4flash-free 被上游 roster 挤掉？还是 UI 目录根本不是这份合成？）。宿主重启后 GUI 端口会漂（58344→...），Harnessed 进程监听端口用 port-hunt.ps1 扫（ExecutionPolicy Bypass 必带）。
+- 110h 已稳落盘（磁盘 node --check OK、引擎 status=applied、SSE rev=d7269eb7e08a、curl 服务字节含 sendBeacon×1、npm test 499 全绿）。等页面刷新后 k=grp 回传，一锤定音。
