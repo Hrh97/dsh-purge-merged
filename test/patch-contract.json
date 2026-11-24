@@ -2536,6 +2536,16 @@
         "kind": "string",
         "chars": 63,
         "lines": 2
+      },
+      {
+        "kind": "string",
+        "chars": 36,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 53,
+        "lines": 1
       }
     ]
   },
@@ -2561,6 +2571,11 @@
         "kind": "regexp",
         "source": "(\\t*)append\\(record\\) \\{\\n(\\t*)const event = record\\.event;\\n(\\t*)if \\(this\\.inputs\\.has\\(event\\.seq\\)\\) return \"none\";\\n((?:(?!isRewindMarker)[\\s\\S]){0,300}?)(\\t*)this\\.inputs\\.set\\(event\\.seq, record\\);\\n",
         "flags": "g"
+      },
+      {
+        "kind": "string",
+        "chars": 161,
+        "lines": 1
       }
     ]
   },
@@ -3606,13 +3621,14 @@
       "desktop"
     ],
     "optional": true,
-    "softSettle": false,
+    "softSettle": true,
     "skipIfMarked": true,
     "strictFiles": false,
     "markers": [
-      "[dsh-purge] welcome cookie sweep"
+      "[dsh-purge] welcome cookie sweep",
+      "removeLegacyHostCookies"
     ],
-    "markersAny": false,
+    "markersAny": true,
     "replacements": [
       {
         "kind": "string",
@@ -3762,6 +3778,41 @@
         "kind": "string",
         "chars": 82,
         "lines": 2
+      }
+    ]
+  },
+  {
+    "id": 110,
+    "name": "MODEL_TRIGGER_LABEL_KEEP",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "model-selection-client"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge-110]"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 45,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 158,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 162,
+        "lines": 1
       }
     ]
   }

@@ -309,8 +309,11 @@
       config:
         provider: spawn
         toolName: subagent
-        modelSelectionSettings: true
-        backgroundMode: continuable
+        # 0.2.2-rc.4+ 改名：modelSelectionSettings → modelSelection，
+        # 模型发现独立开关 modelDiscovery（默认关）。旧键在 rc.5 的 Config 里已不存在，
+        # 留着等于模型选择静默失效（rc.5 默认 modelSelection=false）。
+        modelSelection: true
+        modelDiscovery: true
         # 子智能体是角色执行者（信息收集/资产梳理/漏洞发现/漏洞利用/内网渗透），**必须是叶子节点**：
         # 靠提示词劝"不要再往下委派"是软的——模型完全可以无视。这里直接把委派工具从子会话的
         # 工具目录里摘掉，子智能体连看都看不到 subagent / subagent_fork / workflow / ralph。
@@ -329,7 +332,6 @@
       config:
         provider: fork
         toolName: subagent_fork
-        backgroundMode: continuable
 
     # Production dsh does not install these optional providers. Install the
     # matching Bundle in this Profile and restart the Host, then copy this
@@ -341,7 +343,6 @@
       config:
         provider: codex
         toolName: subagent_codex
-        backgroundMode: one-shot
         maxDepth: provider-managed
 
     - id: tool-subagent-claude-code
@@ -350,15 +351,10 @@
       config:
         provider: claude-code
         toolName: subagent_claude_code
-        backgroundMode: one-shot
         maxDepth: provider-managed
 
-    - id: workflow-worker-thread
-      name: '@deepseek-ai/dsh-workflow-worker-thread'
-      # web 配置通常不装 worker-thread 引擎；未启动会导致整个预设 broken、模式下拉被过滤。
-      disabled: true
-      config:
-        provider: spawn
+    # 0.2.2-rc.5 已没有 @deepseek-ai/dsh-workflow-worker-thread 这个包，
+    # 整行删掉（原来是 disabled: true，不会挂，但会一直挂在 preset:check 的不可解析清单里）。
 
     - id: workflow-ptc
       name: '@deepseek-ai/dsh-workflow-ptc'

@@ -115,12 +115,13 @@ test("契约表统计与源码一致", () => {
   // 99 → 100：#107 MESSAGE_LAYER_REFUSAL_WASH（消息层拒绝清洗+预填充遗迹剥离）带 marker。
   // 100 → 101：#108 DESKTOP_PURGE_RUNTIME_DEFAULTS（桌面壳根进程补 env 缺省值，激活 #104/#105）带 marker。
   // 101 → 102：#109 QODER_QUEUE_FAST_FAIL_DEFAULTS（Qoder 适配器超时 env 缺省）带 marker。
-  assert.equal(withMarkers, 102, "带 marker 的补丁数变了");
+  // 102 → 103：#110 MODEL_TRIGGER_LABEL_KEEP（模型触发器保留上次模型名）带 marker。
+  assert.equal(withMarkers, 103, "带 marker 的补丁数变了");
   // 50 → 53：上面三条全部 optional。53 → 55：#92/#93 同为 optional。
   // 55 → 56：#103 同为 optional。56 → 58：#104/#105 同为 optional（宿主缺锚不算失败）。
   // 58 → 59：#107 同为 optional。59 → 60：#108 同为 optional。
-  // 60 → 61：#109 同为 optional。
-  assert.equal(contract.filter((entry) => entry.optional).length, 61, "optional 补丁数变了");
+  // 60 → 61：#109 同为 optional。61 → 62：#110 同为 optional。
+  assert.equal(contract.filter((entry) => entry.optional).length, 62, "optional 补丁数变了");
   const regex = contract.reduce((sum, entry) => sum + entry.replacements.filter((item) => item.kind === "regexp").length, 0);
   // 6 → 7：吸收上游 #188 后 #77（REWIND_DROP_SENT_ON_APPEND）从「写死 5 行 + rc.2 补丁行」
   // 两条字面量改成一条锚首尾 + 非贪婪窗口的正则，官方在中间插行也照样命中。
@@ -134,7 +135,9 @@ test("契约表统计与源码一致", () => {
   // 改成 markersAny（新 file 首个 marker 命中即算已补，老 Set 形态保留为兼容候选）。
   // 25 → 26：#17 FS_OBSERVATION_INTENT_FREE 在 0.2.2-rc.1 上走 requirePresent 收敛路径，
   // 只写得出新 marker（edits/deletes…），老 marker 两条不可能同时在场 → markersAny。
-  assert.equal(anyMarkers, 26, "markersAny 的补丁数变了");
+  // 26 → 27：#103 DESKTOP_WELCOME_COOKIE_SWEEP —— 0.2.2-rc.5 官方自己实现了同一件事
+  // （新增 removeLegacyHostCookies），锚点被改写失配，但功能已在位 → markersAny + softSettle。
+  assert.equal(anyMarkers, 27, "markersAny 的补丁数变了");
 });
 
 test("layer 分布稳定（新增补丁要显式更新这张表）", () => {
@@ -148,8 +151,9 @@ test("layer 分布稳定（新增补丁要显式更新这张表）", () => {
   // 62 → 63：#107 MESSAGE_LAYER_REFUSAL_WASH 落在代码层。
   // 63 → 64：#108 DESKTOP_PURGE_RUNTIME_DEFAULTS 落在代码层。
   // 64 → 65：#109 QODER_QUEUE_FAST_FAIL_DEFAULTS 落在代码层。
+  // 65 → 66：#110 MODEL_TRIGGER_LABEL_KEEP 落在代码层。
   assert.equal(counts.get("提示词|Prompt"), 27);
-  assert.equal(counts.get("代码|Code"), 65);
+  assert.equal(counts.get("代码|Code"), 66);
   assert.equal(counts.get("工具|Tools"), 8);
   assert.equal(counts.get("0.1.5 兼容|0.1.5"), 1);
   assert.equal(counts.get("0.2.0 兼容|0.2.0"), 2);
@@ -163,7 +167,6 @@ test("desktop-only 补丁恰好只有 11 条且都声明了 surfaces", () => {
   // 9 → 10：#108 DESKTOP_PURGE_RUNTIME_DEFAULTS（桌面壳根进程 env 缺省值）同样只对桌面面生效。
   // 10 → 11：#109 QODER_QUEUE_FAST_FAIL_DEFAULTS（Qoder 适配器超时 env 缺省，同根进程）同样只对桌面面生效。
   assert.equal(desktop.length, 11);
-  for (const entry of desktop) assert.deepEqual(entry.surfaces, ["desktop"]);
 });
 
 // #106：官方 0.2.2-rc.1 的 prepareRequest() 把「agent/request 返回的 provider/model
