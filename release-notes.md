@@ -1,3 +1,31 @@
+# 1.3.0
+
+## 中文
+
+- 版本 **1.3.0**。适配 **DSH 0.2.2-rc.5** 宿主。
+- **rc.5 五项真缺口**：client.inject 移除 rc.5 已删的 dsh-client-runtime / dsh-client-ui-slots（保留 ui-conversation 供 #56/#77 打 rewind 补丁）；redteam 三处 `ctx.subagents.listChildren` → `listDescendants` 双兼容（depth===1 过滤直接子）；continue-retry `PERMANENT_CODES` 15→31 并补 `CONTENT_REFUSED` 等 rc.4/5 新码（此前落 MALFORMED_RESPONSE，被当网络抖动无限重试烧 token）；CLI 新增 `looksLikeStaleBase` + `runningDesktopAiBase`，`--status` 从旧 web 副本改报真桌面宿主；presets/redteam 子代理 schema 迁 rc.5（modelSelectionSettings→modelSelection/modelDiscovery，删 workflow-worker-thread）。
+- **落地挖出的三个洞**：补丁门控按宿主分区判（surfaceForAiBase），11 条 desktop-only 补丁不再误报 na；吸收 ZXEB 0.2.2+ 压缩版锚点（rc.5 前端单行压缩，#56/#77 多行锚点全失配、rewind 两件套静默失效）；#103 welcome cookie 清扫改 markersAny + softSettle，不再误判 drifted。
+- **吸收 ZXEB v1.1.76 剩余缺口并对齐 doctor/status 口径**：freshExtract 分支不再传 forApply:true，修桌面首次解包升级后重复解包 200MB asar；新增 `migrateSubagentConfigKeys` 旧预设就地自愈迁移；`--doctor` 口径对齐 `--status`（修前 drifted 39 假阳性，修后 applied 99 / drifted 0 / na 5）。
+- **金鱼独立盲审 3 高 / 5 中 / 2 低全修**：H1 CI 硬读仓库外本机路径改 existsSync 守卫；H2 调试探针计数行泄漏剥掉（含活宿主 82 字符）；H3 #110 三段共用 marker 导致部分漂移被吞，拆 110a/110b/110c 独立 marker + 归一升级链 + patchPartiallyMarked；M1 PERMANENT_CODES 补 4 漏网码（INVALID_ADAPTER / INVALID_PREPARED_CALL / REGISTRATION_DISPOSED / MODEL_SWITCH_COMPACTION_FAILED）；M2 --doctor 撤销型补丁独立 skipped 桶；M3 yaml-keys/subagent-compat 抽模块；M5 runningDesktopAiBase 探测失败 5s 短负缓存 + `DSH_PURGE_SKIP_RUNNING_DESKTOP_PROBE=1` 短路（628ms→6ms）。
+- **#110 探针降级 opt-in**：4 段探针（110g/i/j/k）收进 `when:"110-probe"` 门，`DSH_PURGE_110_PROBE=1` 才开，默认纯净宿主 0 探针注入；6 段 probe strip 剥历史产物，真实宿主 6 份重复 g 钩子 + 全套探针一次收敛；markers 终态收敛为 [110a,110b,110d]，skipIfMarked 短路加 probeResiduePresent 放行 + applyReplacementsForApply 门开时 strip 段退出（防 rep9 打上又被剥、净效果 0）。
+- **reapply 选项抽纯函数**：applyPatchesAllHosts 调用参数抽成 `applyHostsOptions(freshExtract, preserveClientBundles)`，A 组断言从源码正则改行为级，排版改动不再打碎测试。
+- 巡检脚本 brownout 三连修（熔断连坐 / GIT_TERMINAL_PROMPT / SSH 认证误判 404）。
+- 全套 `npm test` **503 pass / 0 fail**；`--status` 98/104 已清洗、0 待清洗、0 漂移。
+- 三处内核改动均未触碰内核提示词正文，无需 `npm run qoder:sync` / Qoder / WorkBuddy 重打。
+
+## English
+
+- **1.3.0**. Targets **DSH 0.2.2-rc.5**.
+- **Five rc.5 gaps**: client.inject drops the removed dsh-client-runtime / dsh-client-ui-slots (keeps ui-conversation for #56/#77 rewind patches); redteam's three `ctx.subagents.listChildren` calls get `listDescendants` dual compat (depth===1 filter); continue-retry `PERMANENT_CODES` 15→31 with `CONTENT_REFUSED` and other rc.4/5 codes (previously mislabelled MALFORMED_RESPONSE and retried forever as network flapping, burning tokens); CLI adds `looksLikeStaleBase` + `runningDesktopAiBase` so `--status` reports the real desktop host instead of a stale web copy; redteam preset subagent schema migrates to rc.5.
+- **Three holes found while landing**: patch gating now resolves per-host surface (surfaceForAiBase), so 11 desktop-only patches no longer misreport na; ZXEB's 0.2.2+ minified anchors absorbed (rc.5 front-end is single-line, #56/#77 multiline anchors missed entirely); #103 welcome-cookie cleanup switched to markersAny + softSettle.
+- **ZXEB v1.1.76 leftovers + doctor/status alignment**: freshExtract no longer passes forApply:true (fixes double-unpack of the 200MB asar after first desktop upgrade); new `migrateSubagentConfigKeys` migrates old presets in place; `--doctor` aligned with `--status` (39 false drifted → 0).
+- **Goldfish blind review, 3 high / 5 medium / 2 low all fixed**: H1 CI no longer reads a machine-local path outside the repo; H2 leaked debug probe counter removed (incl. 82 chars from the live host); H3 #110's shared marker replaced with independent 110a/110b/110c markers + normalization upgrade chain + patchPartiallyMarked; M1 four missing codes added; M2 --doctor gets a separate skipped bucket for revert patches; M3 yaml-keys/subagent-compat extracted; M5 runningDesktopAiBase probe failure gets a 5s negative cache + `DSH_PURGE_SKIP_RUNNING_DESKTOP_PROBE=1` short-circuit (628ms→6ms).
+- **#110 probe degradation is opt-in**: four probe segments (110g/i/j/k) moved behind a `when:"110-probe"` gate, opened only by `DSH_PURGE_110_PROBE=1`; default clean host gets zero probe injection. Six probe-strip segments remove historical residue; markers settle to [110a,110b,110d].
+- **reapply options extracted**: applyPatchesAllHosts arguments factored into `applyHostsOptions(freshExtract, preserveClientBundles)`; A-group assertions switched from source regex to behavior-level.
+- Patrol script brownout triple fix (circuit-breaker collateral / GIT_TERMINAL_PROMPT / SSH-auth-misread-as-404).
+- Full `npm test`: **503 pass / 0 fail**; `--status` 98/104 cleaned, 0 pending, 0 drifted.
+- No core prompt text touched; no `npm run qoder:sync` / Qoder / WorkBuddy reapply needed.
+
 # 1.2.7
 
 ## 中文
