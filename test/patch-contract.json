@@ -3902,5 +3902,40 @@
         "lines": 1
       }
     ]
+  },
+  {
+    "id": 111,
+    "name": "CLAUDE_STYLE_MODEL_ALIAS",
+    "layer": "代码",
+    "layerEn": "Code",
+    "files": [
+      "claude-style-client"
+    ],
+    "surfaces": [],
+    "optional": true,
+    "softSettle": false,
+    "skipIfMarked": true,
+    "strictFiles": false,
+    "markers": [
+      "[dsh-purge-111]"
+    ],
+    "markersAny": false,
+    "replacements": [
+      {
+        "kind": "string",
+        "chars": 250,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 250,
+        "lines": 1
+      },
+      {
+        "kind": "string",
+        "chars": 250,
+        "lines": 1
+      }
+    ]
   }
 ]

@@ -116,12 +116,14 @@ test("契约表统计与源码一致", () => {
   // 100 → 101：#108 DESKTOP_PURGE_RUNTIME_DEFAULTS（桌面壳根进程补 env 缺省值，激活 #104/#105）带 marker。
   // 101 → 102：#109 QODER_QUEUE_FAST_FAIL_DEFAULTS（Qoder 适配器超时 env 缺省）带 marker。
   // 102 → 103：#110 MODEL_TRIGGER_LABEL_KEEP（模型触发器保留上次模型名）带 marker。
-  assert.equal(withMarkers, 103, "带 marker 的补丁数变了");
+  // 103 → 104：#111 CLAUDE_STYLE_MODEL_ALIAS（claude-style 重绘模型按钮剥 -purge 别名）带 marker。
+  assert.equal(withMarkers, 104, "带 marker 的补丁数变了");
   // 50 → 53：上面三条全部 optional。53 → 55：#92/#93 同为 optional。
   // 55 → 56：#103 同为 optional。56 → 58：#104/#105 同为 optional（宿主缺锚不算失败）。
   // 58 → 59：#107 同为 optional。59 → 60：#108 同为 optional。
   // 60 → 61：#109 同为 optional。61 → 62：#110 同为 optional。
-  assert.equal(contract.filter((entry) => entry.optional).length, 62, "optional 补丁数变了");
+  // 62 → 63：#111 同为 optional（claude-style 在 profile，可能未装，缺锚不算失败）。
+  assert.equal(contract.filter((entry) => entry.optional).length, 63, "optional 补丁数变了");
   const regex = contract.reduce((sum, entry) => sum + entry.replacements.filter((item) => item.kind === "regexp").length, 0);
   // 6 → 7：吸收上游 #188 后 #77（REWIND_DROP_SENT_ON_APPEND）从「写死 5 行 + rc.2 补丁行」
   // 两条字面量改成一条锚首尾 + 非贪婪窗口的正则，官方在中间插行也照样命中。
@@ -152,8 +154,9 @@ test("layer 分布稳定（新增补丁要显式更新这张表）", () => {
   // 63 → 64：#108 DESKTOP_PURGE_RUNTIME_DEFAULTS 落在代码层。
   // 64 → 65：#109 QODER_QUEUE_FAST_FAIL_DEFAULTS 落在代码层。
   // 65 → 66：#110 MODEL_TRIGGER_LABEL_KEEP 落在代码层。
+  // 66 → 67：#111 CLAUDE_STYLE_MODEL_ALIAS 落在代码层。
   assert.equal(counts.get("提示词|Prompt"), 27);
-  assert.equal(counts.get("代码|Code"), 66);
+  assert.equal(counts.get("代码|Code"), 67);
   assert.equal(counts.get("工具|Tools"), 8);
   assert.equal(counts.get("0.1.5 兼容|0.1.5"), 1);
   assert.equal(counts.get("0.2.0 兼容|0.2.0"), 2);
