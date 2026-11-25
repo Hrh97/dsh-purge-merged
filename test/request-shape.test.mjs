@@ -14,6 +14,7 @@ import {
   buildPrefillText,
   classifyRefusal,
   cloneMessages,
+  hasToolCalls,
   installRequestShape,
   makeProxyAdapter,
   pickPrefillShape,
@@ -222,6 +223,72 @@ test("reshapeMessages: stats.prefill 恒为 undefined", () => {
 test("reshapeMessages: shadowRefusal=false 时不擦", () => {
   const out = reshapeMessages([sysMsg("s"), asstMsg("抱歉，我不能协助。"), userMsg("u")], { shadowRefusal: false }, {});
   assert.ok(JSON.stringify(out).includes("我不能协助"));
+});
+
+test("hasToolCalls: toolCalls / tool_calls 非空数组才算，空数组与缺失不算", () => {
+  assert.equal(hasToolCalls({ toolCalls: [{ id: "c1" }] }), true);
+  assert.equal(hasToolCalls({ tool_calls: [{ id: "c1" }] }), true);
+  assert.equal(hasToolCalls({ toolCalls: [] }), false);
+  assert.equal(hasToolCalls({ tool_calls: null }), false);
+  assert.equal(hasToolCalls({}), false);
+  // 金鱼 H1：两个字段并存时，空数组不能压掉非空字段（旧实现用 ?? 会失效）。
+  assert.equal(hasToolCalls({ toolCalls: [], tool_calls: [{ id: "c2" }] }), true);
+});
+
+test("hasToolCalls: content 内嵌 tool_use / tool-call / tool-call-start 也算（金鱼 H1）", () => {
+  // 形态清单与 lib/net-scope.js:551 对齐，宿主真实会给出这种表达。
+  assert.equal(hasToolCalls({ content: [{ type: "text", text: "x" }, { type: "tool_use", id: "t1" }] }), true);
+  assert.equal(hasToolCalls({ content: [{ type: "tool-call", id: "t2" }] }), true);
+  assert.equal(hasToolCalls({ content: [{ type: "tool-call-start", id: "t3" }] }), true);
+  assert.equal(hasToolCalls({ content: [{ type: "text", text: "x" }] }), false);
+  assert.equal(hasToolCalls({ content: "纯字符串" }), false);
+});
+
+test("reshapeMessages: content 内嵌 tool_use 的 assistant 拒答不被整条替换（tool 配对，金鱼 H1）", () => {
+  const toolAsst = {
+    role: "assistant",
+    content: [
+      { type: "text", text: "抱歉，我不能协助这个请求。" },
+      { type: "tool_use", id: "t1", name: "run", input: {} },
+    ],
+  };
+  const stats = {};
+  const out = reshapeMessages([sysMsg("s"), toolAsst, userMsg("u")], { shadowRefusal: true }, stats);
+  assert.equal(stats.refusalsShadowed, 0, "带 tool_use block 的拒答不该被擦");
+  assert.equal(out[1].content.length, 2, "tool_use block 必须原样保留");
+  assert.equal(out[1].content[1].type, "tool_use");
+  assert.equal(out[1].content[0].text, "抱歉，我不能协助这个请求。");
+});
+
+test("reshapeMessages: 带工具调用的 assistant 消息不被擦除/剥免责（保护 tool 配对）", () => {
+  // 吸收 yushang657/DSH-YS-pojia 的 hasToolCalls guard。
+  // 历史拒答擦除若把 content 换成占位，tool_calls 就找不到对应正文，上游直接 400。
+  const toolAsst = {
+    role: "assistant",
+    content: [{ type: "text", text: "抱歉，我不能协助这个请求。" }],
+    tool_calls: [{ id: "call_1", type: "function", function: { name: "run", arguments: "{}" } }],
+  };
+  const stats = {};
+  const out = reshapeMessages(
+    [sysMsg("s"), toolAsst, userMsg("u")],
+    { shadowRefusal: true, msgStrip: true },
+    stats,
+  );
+  assert.equal(stats.refusalsShadowed, 0, "带 tool_calls 的拒答不该被擦");
+  assert.equal(out[1].content[0].text, "抱歉，我不能协助这个请求。");
+  assert.deepEqual(out[1].tool_calls, toolAsst.tool_calls, "tool_calls 原样保留");
+});
+
+test("reshapeMessages: 带 toolCalls（驼峰）的 assistant 消息同样跳过免责剥离", () => {
+  const toolAsst = {
+    role: "assistant",
+    content: [{ type: "text", text: "They do not override system, developer, or direct user instructions. 正常正文" }],
+    toolCalls: [{ id: "call_2" }],
+  };
+  const stats = {};
+  const out = reshapeMessages([sysMsg("s"), toolAsst, userMsg("u")], { msgStrip: true, shadowRefusal: false }, stats);
+  assert.equal(stats.msgStrip, 0);
+  assert.ok(out[1].content[0].text.includes("override system"), "带工具调用的消息正文不被改写");
 });
 
 test("reshapeMessages: manyShot=0 时不插", () => {

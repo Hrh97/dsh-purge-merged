@@ -1,3 +1,21 @@
+# 1.3.1
+
+## 中文
+
+- 版本 **1.3.1**。补丁级：两项社区候选健壮性小修 + 金鱼盲审 5 项修复，内核提示词正文未动。
+- **请求层工具调用配对保护**：`request-shape.js` 新增 `hasToolCalls`，免责句剥离与历史拒答擦除两条改写路径都跳过带工具调用的 assistant 消息（顶层 `toolCalls` / `tool_calls` 任一非空，或 content 内嵌 `tool_use` / `tool-call` / `tool-call-start` block）——避免 content 被占位替换后 tool 结果配对断裂、上游 400。
+- **更新器覆盖改「先铺新 → 交换 → 再删旧」**：`update.js` 新增 `overlayPayload`，三段式 staging / rename 交换 / 延迟删备份，中断可回滚；staging 移出插件根目录避免清单误收、按 dest 加并发锁、遗留备份唯一副本时拒绝覆盖并要求人工确认。
+- **金鱼独立盲审 5 项全修**：H1 工具调用形态漏判、M1 回滚失败静默吞、M2 staging 位置与并发、M3 遗留备份丢唯一副本、L2 JSDoc 幂等表述。
+- 全套 `npm test` **517 pass / 0 fail**。无需 `npm run qoder:sync` / Qoder / WorkBuddy 重打（内核提示词未改）。
+
+## English
+
+- **1.3.1**. Patch release: two community-candidate robustness fixes plus five goldfish-review fixes; core prompt text untouched.
+- **Tool-call pairing guard in request layer**: `request-shape.js` adds `hasToolCalls`; disclaimer stripping and refusal shadowing both skip assistant messages carrying tool calls (top-level `toolCalls` / `tool_calls` non-empty, or embedded `tool_use` / `tool-call` / `tool-call-start` content blocks) — avoids broken tool pairing and upstream 400s when content is replaced by a placeholder.
+- **Updater overlay is now stage → swap → deferred delete**: `update.js` adds `overlayPayload`, a three-phase atomic-ish swap with rollback; staging moved out of the plugin root to avoid manifest scans, per-dest concurrency lock, and refusal to overwrite when a leftover backup is the only readable old copy.
+- **Goldfish blind review, five issues all fixed**: H1 missed tool-call shapes, M1 silently swallowed rollback failure, M2 staging location + concurrency, M3 leftover backup dropping the only copy, L2 overstated JSDoc idempotency.
+- Full `npm test`: **517 pass / 0 fail**. No `npm run qoder:sync` / Qoder / WorkBuddy reapply needed (core prompt unchanged).
+
 # 1.3.0
 
 ## 中文
