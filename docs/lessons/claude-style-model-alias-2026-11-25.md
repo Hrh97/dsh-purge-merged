@@ -11,7 +11,12 @@
 
 ## 修复（#111 CLAUDE_STYLE_MODEL_ALIAS）
 - 解析函数加三级匹配：双侧剥 -purge → 同 model id 全目录 → null。
-- 压缩变量名随版本换血：0.22.2=R(f)、0.22.1=M(h)、web profile 0.19.3=p(c)——三条 replacement 共存（非当前构建 0 命中正常，不带 expect）。
+- 压缩变量名随版本换血：0.22.1=M(h)、0.22.2=R(f)、0.22.3=k(f)、web profile 0.19.3=p(c)——四条 replacement 共存
+  （非当前构建 0 命中正常，不带 expect）。0.22.3 于 2026-11-26 09:22 自动更新抹掉 0.22.2 补丁，#111 第四形态接住。
+- **斜杠事故（11-26）**：手写新形态时把 `.replace(/-purge$/,...)` 写漏闭合斜杠成 `/-purge$,`——正则不闭合，
+  解析器把后面整段吞进正则体直到下一个 `/`（注释 `/*`），报 `Invalid regular expression: Unmatched )`。
+  且 p(c) 形态当时就带着同款错误但从未落盘（web 面不洗）所以没暴露——**每条新 replacement 都要在临时副本上
+  node --check 实证，不能因为「和上一条长得一样」就免检**。
 - file 键 claude-style-client：profiles/{desktop,web}/node_modules/dsh-claude-style/lib/client.js。
 - markers: ["[dsh-purge-111]"]；contract patches=105 withMarkers=104 optional=63；代码层 66→67；npm test 517 全绿。
 
