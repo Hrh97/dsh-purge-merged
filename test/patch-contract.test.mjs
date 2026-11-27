@@ -128,7 +128,8 @@ test("契约表统计与源码一致", () => {
   // 6 → 7：吸收上游 #188 后 #77（REWIND_DROP_SENT_ON_APPEND）从「写死 5 行 + rc.2 补丁行」
   // 两条字面量改成一条锚首尾 + 非贪婪窗口的正则，官方在中间插行也照样命中。
   // 7 → 9：上游 1.1.90 的 #1/#32 在 rc.5 双版本适配里各多了一条正则形态。
-  assert.equal(regex, 9, "RegExp 形式的 replacement 数变了");
+  // 9 → 10：#111 改为通用正则（压缩变量名每版换血，不再逐版枚举形态）。
+  assert.equal(regex, 10, "RegExp 形式的 replacement 数变了");
   const anyMarkers = contract.filter((entry) => entry.markersAny).length;
   // #94/#95 的补丁内容官方 0.2.1-rc.3 已经自己实现了（只是没带我们的注释），
   // 所以两条都加了「结果态」标记并改成 markersAny —— 否则它们会被误判成 drifted。

@@ -11,8 +11,11 @@
 
 ## 修复（#111 CLAUDE_STYLE_MODEL_ALIAS）
 - 解析函数加三级匹配：双侧剥 -purge → 同 model id 全目录 → null。
-- 压缩变量名随版本换血：0.22.1=M(h)、0.22.2=R(f)、0.22.3=k(f)、web profile 0.19.3=p(c)——四条 replacement 共存
-  （非当前构建 0 命中正常，不带 expect）。0.22.3 于 2026-11-26 09:22 自动更新抹掉 0.22.2 补丁，#111 第四形态接住。
+- **压缩变量名每小版本换血**：0.22.1=M(h)、0.22.2=R(f)、0.22.3=k(f)、0.22.4=M(p)、web profile 0.19.3=p(c)。
+  逐版枚举是打地鼠（11-25/11-26/11-27 连续三天被自动更新打回）。**2026-11-27 终局：#111 改用一条通用正则**
+  `/function ([\w$]+)\(([a-z])\)\{if\(!\2\|\|\2\.current===null\)return null;(?!const _p=)[\s\S]*?\}\}return null\}/g`，
+  用 `$1`/`$2` 捕获复用任意变量名，负向前瞻防重复消费。桌面+web 两 profile 各命中 1 次、node --check OK、
+  引擎 applied→already 幂等；regexReplacements 9→10，npm test 523 全绿。以后再换变量名都不用改补丁。
 - **斜杠事故（11-26）**：手写新形态时把 `.replace(/-purge$/,...)` 写漏闭合斜杠成 `/-purge$,`——正则不闭合，
   解析器把后面整段吞进正则体直到下一个 `/`（注释 `/*`），报 `Invalid regular expression: Unmatched )`。
   且 p(c) 形态当时就带着同款错误但从未落盘（web 面不洗）所以没暴露——**每条新 replacement 都要在临时副本上

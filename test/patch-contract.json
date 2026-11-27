@@ -3922,24 +3922,9 @@
     "markersAny": false,
     "replacements": [
       {
-        "kind": "string",
-        "chars": 250,
-        "lines": 1
-      },
-      {
-        "kind": "string",
-        "chars": 250,
-        "lines": 1
-      },
-      {
-        "kind": "string",
-        "chars": 250,
-        "lines": 1
-      },
-      {
-        "kind": "string",
-        "chars": 250,
-        "lines": 1
+        "kind": "regexp",
+        "source": "function ([A-Za-z_$][\\w$]*)\\(([a-z])\\)\\{if\\(!\\2\\|\\|\\2\\.current===null\\)return null;(?!const _p=)[\\s\\S]*?\\}\\}return null\\}",
+        "flags": "g"
       }
     ]
   }
